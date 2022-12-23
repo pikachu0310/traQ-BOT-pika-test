@@ -5,6 +5,7 @@ import (
 	"example-bot/util"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/traPtitech/traq-ws-bot/payload"
@@ -37,14 +38,23 @@ func MessageReceived() func(p *payload.MessageCreated) {
 		} else if slice[0] == "/help" {
 			respond(p, "そんなコマンドはないよ")
 		} else if slice[0] == "/stamp" {
-			api.AddStamps(p.Message.ID, slice[1])
-		} else if slice[0] == "/allstamp" {
-			allstamps = api.GetAllStamps()
-			stamps_respond := ""
-			for i := 0; i <= 10; i++ {
-			stamps_respond += allstamps[i]
+			if slice[1] == "add" {
+				api.AddStamps(p.Message.ID, slice[1])
+			} else if slice[1] == "remove" {
+				api.RemoveStamp(p.Message.ID, slice[1])
 			}
-			respond(p, allstamps)\
+		} else if slice[0] == "/allstamps" {
+			allStamps := api.GetAllStamps()
+			stampsRespond := ""
+			num := slice[1]
+			toInt, err := strconv.Atoi(num)
+			if err != nil {
+			} else {
+				for i := 0; i <= toInt; i++ {
+					stampsRespond += ":" + allStamps[i].Name + ":"
+				}
+				respond(p, stampsRespond)
+			}
 		}
 	}
 }
