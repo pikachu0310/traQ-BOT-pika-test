@@ -13,11 +13,10 @@ import (
 func MessageReceived() func(p *payload.MessageCreated) {
 	return func(p *payload.MessageCreated) {
 		log.Println("=================================================")
+		log.Printf("MessageReceived()")
 		log.Printf("Message created by %s\n", p.Message.User.DisplayName)
-		log.Println("Message:")
-		log.Println(p.Message.Text)
-		log.Println("Payload:")
-		log.Printf("%+v\n", p)
+		log.Println("Message:" + p.Message.Text)
+		log.Printf("Payload:"+"%+v", p)
 
 		text := p.Message.PlainText
 		slice := strings.Split(text, " ")
@@ -37,6 +36,15 @@ func MessageReceived() func(p *payload.MessageCreated) {
 			respond(p, oisu+" "+p.Message.User.DisplayName)
 		} else if slice[0] == "/help" {
 			respond(p, "そんなコマンドはないよ")
+		} else if slice[0] == "/stamp" {
+			api.AddStamps(p.Message.ID, slice[1])
+		} else if slice[0] == "/allstamp" {
+			allstamps = api.GetAllStamps()
+			stamps_respond := ""
+			for i := 0; i <= 10; i++ {
+			stamps_respond += allstamps[i]
+			}
+			respond(p, allstamps)\
 		}
 	}
 }

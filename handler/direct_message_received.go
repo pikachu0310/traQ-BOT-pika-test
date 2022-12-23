@@ -13,11 +13,10 @@ import (
 func DirectMessageReceived() func(p *payload.DirectMessageCreated) {
 	return func(p *payload.DirectMessageCreated) {
 		log.Println("=================================================")
+		log.Printf("DirectMessageReceived()")
 		log.Printf("Message created by %s\n", p.Message.User.DisplayName)
-		log.Println("Message:")
-		log.Println(p.Message.Text)
-		log.Println("Payload:")
-		log.Printf("%+v\n", p)
+		log.Println("Message:" + p.Message.Text)
+		log.Printf("Payload:"+"%+v", p)
 
 		text := p.Message.PlainText
 		slice := strings.Split(text, " ")
@@ -37,6 +36,8 @@ func DirectMessageReceived() func(p *payload.DirectMessageCreated) {
 			direct_respond(p, oisu+" "+p.Message.User.DisplayName)
 		} else if slice[0] == "/help" {
 			direct_respond(p, "そんなコマンドはないよ")
+		} else if slice[0] == "/stamp" {
+			api.AddStamps(p.Message.ID, slice[1])
 		}
 	}
 }

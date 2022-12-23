@@ -9,9 +9,8 @@ import (
 func ChannelTopicChanged() func(p *payload.ChannelTopicChanged) {
 	return func(p *payload.ChannelTopicChanged) {
 		log.Println("=================================================")
-		log.Printf("Channel topic changed by %s\n")
-		log.Println("Payload:")
-		log.Printf("%+v\n", p)
+		log.Printf("ChannelTopicChanged()")
+		log.Printf("Payload:"+"%+v", p)
 
 		content := "channel topicが変更されました: " + p.Topic
 		api.PostMessage(p.Channel.ID, content)
