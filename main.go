@@ -4,7 +4,6 @@ import (
 	"example-bot/handler"
 	"example-bot/util"
 	"fmt"
-
 	traqwsbot "github.com/traPtitech/traq-ws-bot"
 )
 
@@ -24,7 +23,8 @@ func main() {
 	}
 
 	bot.OnMessageCreated(handler.MessageReceived())
-
+	bot.OnDirectMessageCreated(handler.DirectMessageReceived())
+	bot.OnChannelTopicChanged(handler.ChannelTopicChanged())
 	// bot.OnDirectMessageCreated(handler.MessageReceived())
 
 	if err := bot.Start(); err != nil {
