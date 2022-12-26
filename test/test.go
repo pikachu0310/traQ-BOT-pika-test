@@ -1,8 +1,8 @@
 package main
 
 import (
-	fmt "fmt"
 	"math/rand"
+	"time"
 )
 
 func ShuffleTest(a []int) {
@@ -12,10 +12,46 @@ func ShuffleTest(a []int) {
 	}
 }
 
-func main() {
-	var test []int = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-	ShuffleTest(test)
-	for i := 0; i < 10; i++ {
-		fmt.Print(i, test)
+var Effect2 = []string{"rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
+
+type OxGameStruct struct {
+	Started   bool
+	MessageID string
+	ChannelID string
+	Stamps    [][]string
+	StampIDs  [][]string
+	Effects   [][][]string
+	HardMode  bool
+}
+
+var OxGame OxGameStruct = OxGameStruct{Started: false}
+
+func OxGameMakeEffect() {
+	OxGame.Effects = make([][][]string, 3, 3)
+	for i := 0; i < 3; i++ {
+		OxGame.Effects[i] = make([][]string, 3, 3)
+		for j := 0; j < 3; j++ {
+			OxGame.Effects[i][j] = make([]string, 5, 5)
+		}
 	}
+	for i := 0; i < 3; i++ {
+		for k := 0; k < 3; k++ {
+			for j := 0; j < 5; j++ {
+				rand.Seed(time.Now().UnixNano())
+				temp := Effect2[rand.Intn(len(Effect2))]
+				for l := 0; l < len(OxGame.Effects[i][k]); l++ {
+					if OxGame.Effects[i][k][j] == temp {
+						temp = Effect2[rand.Intn(len(Effect2))]
+						l = 0
+					}
+				}
+				OxGame.Effects[i][k][j] = temp
+			}
+		}
+	}
+}
+
+func main() {
+
+	OxGameMakeEffect()
 }
