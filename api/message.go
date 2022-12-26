@@ -37,3 +37,17 @@ func EditMessage(messageID string, content string) {
 		log.Println(err)
 	}
 }
+
+func GetMessage(messageID string) *traq.Message {
+
+	bot := util.GetBot()
+
+	message, _, err := bot.API().
+		MessageApi.
+		GetMessage(context.Background(), messageID).
+		Execute()
+	if err != nil {
+		log.Println(err)
+	}
+	return message
+}
