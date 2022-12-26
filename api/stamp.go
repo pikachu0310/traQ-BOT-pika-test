@@ -44,3 +44,13 @@ func GetAllStamps() []traq.Stamp {
 	}
 	return stamps
 }
+
+func GetStamp(stampID string) *traq.Stamp {
+	fmt.Println("GetStamp", stampID)
+	bot := util.GetBot()
+	stamp, _, err := bot.API().StampApi.GetStamp(context.Background(), stampID).Execute()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return stamp
+}
