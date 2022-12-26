@@ -2,8 +2,7 @@ package handler
 
 import (
 	"example-bot/api"
-	"example-bot/util"
-	"fmt"
+	"example-bot/commands"
 	"log"
 	"strconv"
 	"strings"
@@ -22,19 +21,16 @@ func MessageReceived() func(p *payload.MessageCreated) {
 		text := p.Message.PlainText
 		slice := strings.Split(text, " ")
 
+		if slice[0] == "@BOT_pika_test" {
+			slice = slice[1:]
+		}
+
 		if slice[0] == "/slice" {
 			respond(p, strings.Join(slice, ", "))
 		} else if slice[0] == "/ping" {
 			respond(p, "pong")
 		} else if slice[0] == "/oisu" {
-			oisu_slice := []int{0, 1, 2, 3}
-			oisu_str := []string{":oisu-1:", ":oisu-2:", ":oisu-3:", ":oisu-4yoko:"}
-			util.Shuffle(oisu_slice)
-			var oisu string = ""
-			for i := 0; i < 4; i++ {
-				oisu += fmt.Sprintf(oisu_str[oisu_slice[i]])
-			}
-			respond(p, oisu+" "+p.Message.User.DisplayName)
+			respond(p, commands.Oisu()+" "+p.Message.User.DisplayName)
 		} else if slice[0] == "/help" {
 			respond(p, "そんなコマンドはないよ")
 		} else if slice[0] == "/stamp" {
@@ -55,6 +51,11 @@ func MessageReceived() func(p *payload.MessageCreated) {
 				}
 				respond(p, stampsRespond)
 			}
+		} else if slice[0] == "/game" {
+			commands.OxGameStart(p, slice)
+		} else if slice[0] == "/edit" {
+			api.EditMessage(p.Message.ID, slice[1])
+			api.EditMessage(slice[1], slice[2])
 		}
 	}
 }
