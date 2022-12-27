@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -51,7 +52,18 @@ func OxGameMakeEffect() {
 	}
 }
 
+func timeTest() {
+	now := time.Now()
+	nowUTC := now.UTC()
+
+	fmt.Println(nowUTC.UnixNano())                           // ナノ秒
+	fmt.Println(time.Millisecond)                            // 1ms
+	fmt.Println(int64(time.Millisecond))                     // 1000000
+	fmt.Println(nowUTC.Unix())                               // 秒
+	fmt.Println(nowUTC.UnixNano() / int64(time.Millisecond)) // ミリ秒を算出する
+}
+
 func main() {
 
-	OxGameMakeEffect()
+	timeTest()
 }

@@ -5,59 +5,34 @@ import (
 	"fmt"
 	"github.com/traPtitech/traq-ws-bot/payload"
 	"math/rand"
-	"reflect"
+	"strconv"
 	"time"
 )
 
 type OxGameStruct struct {
-	Started   bool
-	MessageID string
-	ChannelID string
-	Stamps    [][]string
-	StampIDs  [][]string
-	Effects   [][][]string
-	HardMode  bool
+	Started    bool
+	MessageID  string
+	ChannelID  string
+	Stamps     [][]string
+	StampIDs   [][]string
+	Effects    [][][]string
+	HardMode   bool
+	FastStart  bool
+	Setsumei   bool
+	StartTime  int64
+	TimeAttack bool
+	PlayerNum  int
 }
 
+var OxGameStartStampNormal string = "type_normal"
+var OxGameStartStampHard string = "crying-hard"
 var OxGamePlayingList []*OxGameStruct
 
 // var Effect = []string{"ex-large", "large", "small", "rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
 // var Effect1 = []string{"ex-large", "large", "small"}
 var Effect2 = []string{"rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
 
-func DebugList(OxGamePlayingList []OxGameStruct) {
-	message := ""
-	for i := 0; i < len(OxGamePlayingList); i++ {
-		OxGameDebug := OxGamePlayingList[i]
-		OxGameDebugType := reflect.TypeOf(OxGameDebug)
-		OxGameDebugValue := reflect.ValueOf(OxGameDebug)
-		message += "```\n"
-		for j := 0; j < OxGameDebugType.NumField(); j++ {
-			field := OxGameDebugType.Field(j)
-			value := OxGameDebugValue.Field(j)
-			message += (field.Name + ": " + value.String() + "\n")
-		}
-		message += "```\n"
-	}
-	println(message)
-}
-
-func Debug(OxGame OxGameStruct) {
-	message := ""
-	OxGameDebug := OxGame
-	OxGameDebugType := reflect.TypeOf(OxGameDebug)
-	OxGameDebugValue := reflect.ValueOf(OxGameDebug)
-	message += "```\n"
-	for j := 0; j < OxGameDebugType.NumField(); j++ {
-		field := OxGameDebugType.Field(j)
-		value := OxGameDebugValue.Field(j)
-		message += (field.Name + ": " + value.String() + "\n")
-	}
-	message += "```\n"
-	println(message)
-}
-
-func OxGameDebug(OxGame OxGameStruct) {
+func OxGameDebug(OxGame *OxGameStruct) {
 	fmt.Println("OxGameDebug")
 	fmt.Println(OxGame.Started)
 	fmt.Println(OxGame.MessageID)
@@ -65,49 +40,93 @@ func OxGameDebug(OxGame OxGameStruct) {
 	fmt.Println(OxGame.Stamps)
 	fmt.Println(OxGame.StampIDs)
 	fmt.Println(OxGame.Effects)
+	fmt.Println(OxGame.HardMode)
+	fmt.Println(OxGame.FastStart)
 }
 
 func OxGameStart(p *payload.MessageCreated, slice []string) {
-	if len(slice) == 0 {
-		api.PostMessage(p.Message.ChannelID, "引数が足りません")
+	OxGame := OxGameGet(p.Message.ChannelID)
+	if len(slice) == 1 {
+		message := ":blob_speedy_roll_inverse::blob_speedy_roll_inverse::blob_speedy_roll_inverse:早押しスタンプ:o::x:ゲーム:blob_speedy_roll::blob_speedy_roll::blob_speedy_roll:\n```ルール\nBOTがランダムなスタンプを3x3のマス上に9個表示するので、\n同じスタンプを押して一列揃えたら勝ち！(揃わなかったら最も多かった人からランダム)\n```\nこのメッセージに:type_normal:を押すとノーマルモード\nこのメッセージに:crying-hard:を押すとハードモードで始まるよ！\ntips:``/game start``や``/game start hard``でクイックスタートができるよ！\nタイムが出るのでタイムアタックも！ Enjoy! :party_blob:"
+		OxGame.Setsumei = true
+		OxGame.MessageID = api.PostMessage(p.Message.ChannelID, message).Id
 		return
 	}
-	OxGame := OxGameGet(p.Message.ChannelID)
-	//OxGameDebug(OxGame)
 	if slice[1] == "start" {
 		if !OxGame.Started {
+			OxGame.TimeAttack = false
 			if len(slice) >= 3 {
 				if slice[2] == "hard" {
 					OxGameMakeEffect(OxGame)
 					OxGame.HardMode = true
 				}
 			}
-			OxGame.Started = true
-			OxGame.ChannelID = p.Message.ChannelID
-			OxGame.Stamps = make([][]string, 3, 3)
-			for i := 0; i < 3; i++ {
-				OxGame.Stamps[i] = make([]string, 3, 3)
-			}
-			OxGame.StampIDs = make([][]string, 3, 3)
-			for i := 0; i < 3; i++ {
-				OxGame.StampIDs[i] = make([]string, 3, 3)
-			}
-			OxGameMakeStamps(OxGame)
-			if OxGame.HardMode {
-				OxGameFirstMessageHard(OxGame)
-			} else {
-				OxGameFirstMessage(OxGame)
-			}
+			OxGame.FastStart = true
+			OxGameInit(OxGame, p.Message.ChannelID)
 		} else {
 			api.PostMessage(p.Message.ChannelID, "ゲームはすでに開始されています。")
 		}
 	} else if slice[1] == "reset" {
-		OxGame.Started = false
+		OxGameInitCompletely(OxGame)
 		api.PostMessage(p.Message.ChannelID, "ゲームをリセットしました。")
 	} else if slice[1] == "debug" {
-		//DebugList(OxGamePlayingList)
-		//OxGameDebug(OxGame)
+		OxGameDebug(OxGame)
+	} else if slice[1] == "timeattack" || slice[1] == "ta" {
+		if !OxGame.Started {
+			OxGame.TimeAttack = true
+			if len(slice) >= 3 {
+				if slice[2] == "hard" {
+					OxGameMakeEffect(OxGame)
+					OxGame.HardMode = true
+				}
+			}
+			OxGame.FastStart = true
+			OxGameInit(OxGame, p.Message.ChannelID)
+		} else {
+			api.PostMessage(p.Message.ChannelID, "ゲームはすでに開始されています。")
+		}
 	}
+}
+
+func OxGameInit(OxGame *OxGameStruct, ChannelID string) {
+	OxGame.Started = true
+	OxGame.ChannelID = ChannelID
+	OxGame.Stamps = make([][]string, 3, 3)
+	for i := 0; i < 3; i++ {
+		OxGame.Stamps[i] = make([]string, 3, 3)
+	}
+	OxGame.StampIDs = make([][]string, 3, 3)
+	for i := 0; i < 3; i++ {
+		OxGame.StampIDs[i] = make([]string, 3, 3)
+	}
+	OxGameMakeStamps(OxGame)
+	if OxGame.HardMode {
+		OxGameFirstMessageHard(OxGame)
+		nowUTC := time.Now().UTC()
+		OxGame.StartTime = nowUTC.UnixNano() / int64(time.Millisecond)
+	} else {
+		OxGameFirstMessage(OxGame)
+		nowUTC := time.Now().UTC()
+		OxGame.StartTime = nowUTC.UnixNano() / int64(time.Millisecond)
+	}
+}
+
+func OxGameInitCompletely(OxGame *OxGameStruct) {
+	OxGame.Started = false
+	OxGame.MessageID = ""
+	OxGame.Stamps = make([][]string, 3, 3)
+	for i := 0; i < 3; i++ {
+		OxGame.Stamps[i] = make([]string, 3, 3)
+	}
+	OxGame.StampIDs = make([][]string, 3, 3)
+	for i := 0; i < 3; i++ {
+		OxGame.StampIDs[i] = make([]string, 3, 3)
+	}
+	OxGame.HardMode = false
+	OxGame.FastStart = false
+	OxGame.Setsumei = false
+	OxGame.TimeAttack = false
+	OxGame.StartTime = 0
 }
 
 func OxGameNew(ChannelID string) *OxGameStruct {
@@ -118,7 +137,6 @@ func OxGameNew(ChannelID string) *OxGameStruct {
 
 func OxGameGet(ChannelID string) *OxGameStruct {
 	for i := 0; i < len(OxGamePlayingList); i++ {
-		fmt.Println(OxGamePlayingList[i].ChannelID, ChannelID)
 		if OxGamePlayingList[i].ChannelID == ChannelID {
 			return OxGamePlayingList[i]
 		}
@@ -140,8 +158,10 @@ func OxGameMakeStamps(OxGame *OxGameStruct) {
 }
 
 func OxGameFirstMessage(OxGame *OxGameStruct) {
-	//OxGameDebug(OxGame)
-
+	if !OxGame.FastStart {
+		OxGameEditMessage(OxGame)
+		return
+	}
 	message := ":" + OxGame.Stamps[0][0] + ": :" + OxGame.Stamps[0][1] + ": :" + OxGame.Stamps[0][2] + ":\n" +
 		":" + OxGame.Stamps[1][0] + ": :" + OxGame.Stamps[1][1] + ": :" + OxGame.Stamps[1][2] + ":\n" +
 		":" + OxGame.Stamps[2][0] + ": :" + OxGame.Stamps[2][1] + ": :" + OxGame.Stamps[2][2] + ":"
@@ -149,35 +169,58 @@ func OxGameFirstMessage(OxGame *OxGameStruct) {
 }
 
 func OxGameEditMessage(OxGame *OxGameStruct) {
-	//OxGameDebug(OxGame)
 	message := ":" + OxGame.Stamps[0][0] + ": :" + OxGame.Stamps[0][1] + ": :" + OxGame.Stamps[0][2] + ":\n" +
 		":" + OxGame.Stamps[1][0] + ": :" + OxGame.Stamps[1][1] + ": :" + OxGame.Stamps[1][2] + ":\n" +
 		":" + OxGame.Stamps[2][0] + ": :" + OxGame.Stamps[2][1] + ": :" + OxGame.Stamps[2][2] + ":"
 	api.EditMessage(OxGame.MessageID, message)
 }
 
-func OxGameJudge(OxGame *OxGameStruct) {
+func OxGameFirstMessageHard(OxGame *OxGameStruct) {
+	message := ""
+	if !OxGame.FastStart {
+		OxGameEditMessageHard(OxGame)
+		return
+	}
 	for i := 0; i < 3; i++ {
-		if OxGame.Stamps[i][0] == OxGame.Stamps[i][1] && OxGame.Stamps[i][1] == OxGame.Stamps[i][2] {
-			api.PostMessage(OxGame.ChannelID, OxGame.Stamps[i][0]+"の勝ちです！")
-			OxGame.Started = false
+		for j := 0; j < 3; j++ {
+			message += ":" + OxGame.Stamps[i][j] + "." + OxGame.Effects[i][j][0] + "." + OxGame.Effects[i][j][1] + "." + OxGame.Effects[i][j][2] + "." + OxGame.Effects[i][j][3] + "." + OxGame.Effects[i][j][4] + ":"
+		}
+		message += "\n"
+	}
+	OxGame.MessageID = api.PostMessage(OxGame.ChannelID, message).Id
+}
+
+func OxGameEditMessageHard(OxGame *OxGameStruct) {
+	message := ""
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			message += ":" + OxGame.Stamps[i][j] + "." + OxGame.Effects[i][j][0] + "." + OxGame.Effects[i][j][1] + "." + OxGame.Effects[i][j][2] + "." + OxGame.Effects[i][j][3] + "." + OxGame.Effects[i][j][4] + ":"
+		}
+		message += "\n"
+	}
+	api.EditMessage(OxGame.MessageID, message)
+}
+
+func OxGameJudge(OxGame *OxGameStruct) {
+	if !OxGame.TimeAttack {
+		for i := 0; i < 3; i++ {
+			if OxGame.Stamps[i][0] == OxGame.Stamps[i][1] && OxGame.Stamps[i][1] == OxGame.Stamps[i][2] {
+				OxGameWin(OxGame.Stamps[i][0], OxGame)
+				return
+			}
+			if OxGame.Stamps[0][i] == OxGame.Stamps[1][i] && OxGame.Stamps[1][i] == OxGame.Stamps[2][i] {
+				OxGameWin(OxGame.Stamps[0][i], OxGame)
+				return
+			}
+		}
+		if OxGame.Stamps[0][0] == OxGame.Stamps[1][1] && OxGame.Stamps[1][1] == OxGame.Stamps[2][2] {
+			OxGameWin(OxGame.Stamps[0][0], OxGame)
 			return
 		}
-		if OxGame.Stamps[0][i] == OxGame.Stamps[1][i] && OxGame.Stamps[1][i] == OxGame.Stamps[2][i] {
-			api.PostMessage(OxGame.ChannelID, OxGame.Stamps[0][i]+"の勝ちです！")
-			OxGame.Started = false
+		if OxGame.Stamps[0][2] == OxGame.Stamps[1][1] && OxGame.Stamps[1][1] == OxGame.Stamps[2][0] {
+			OxGameWin(OxGame.Stamps[0][2], OxGame)
 			return
 		}
-	}
-	if OxGame.Stamps[0][0] == OxGame.Stamps[1][1] && OxGame.Stamps[1][1] == OxGame.Stamps[2][2] {
-		api.PostMessage(OxGame.ChannelID, OxGame.Stamps[0][0]+"の勝ちです！")
-		OxGame.Started = false
-		return
-	}
-	if OxGame.Stamps[0][2] == OxGame.Stamps[1][1] && OxGame.Stamps[1][1] == OxGame.Stamps[2][0] {
-		api.PostMessage(OxGame.ChannelID, OxGame.Stamps[0][2]+"の勝ちです！")
-		OxGame.Started = false
-		return
 	}
 	if OxGame.StampIDs[0][0] == "Done" && OxGame.StampIDs[0][1] == "Done" && OxGame.StampIDs[0][2] == "Done" &&
 		OxGame.StampIDs[1][0] == "Done" && OxGame.StampIDs[1][1] == "Done" && OxGame.StampIDs[1][2] == "Done" &&
@@ -199,6 +242,7 @@ func OxGameJudge(OxGame *OxGameStruct) {
 				}
 			}
 		}
+		OxGame.PlayerNum = len(names)
 		max := 0
 		for i := 0; i < len(numbers); i++ {
 			if numbers[i] == numbers[max] {
@@ -210,14 +254,38 @@ func OxGameJudge(OxGame *OxGameStruct) {
 				max = i
 			}
 		}
-		api.PostMessage(OxGame.ChannelID, names[max]+"の勝ちです！")
-		OxGame.Started = false
+		OxGame.TimeAttack = true
+		OxGameWin(names[max], OxGame)
 		return
 	}
 }
 
+func OxGameWin(UserName string, OxGame *OxGameStruct) {
+	nowUTC := time.Now().UTC()
+	timeResult := (nowUTC.UnixNano() / int64(time.Millisecond)) - OxGame.StartTime
+	timeSec := timeResult / 1000
+	timeMilliSec := timeResult % 1000
+	if OxGame.TimeAttack {
+		if OxGame.HardMode {
+			message := ":" + UserName + ":の勝ちです！\nタイム(HardTimeAttack): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！" + " / 人数:" + strconv.Itoa(OxGame.PlayerNum)
+			api.AddMessageWithNewLine(OxGame.MessageID, message)
+		} else {
+			message := ":" + UserName + ":の勝ちです！\nタイム(NormalTimeAttack): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！" + " / 人数:" + strconv.Itoa(OxGame.PlayerNum)
+			api.AddMessageWithNewLine(OxGame.MessageID, message)
+		}
+	} else {
+		if OxGame.HardMode {
+			message := ":" + UserName + ":の勝ちです！\nタイム(Hard): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！"
+			api.AddMessageWithNewLine(OxGame.MessageID, message)
+		} else {
+			message := ":" + UserName + ":の勝ちです！\nタイム(Normal): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！"
+			api.AddMessageWithNewLine(OxGame.MessageID, message)
+		}
+	}
+	OxGameInitCompletely(OxGame)
+}
+
 func OxGameMakeEffect(OxGame *OxGameStruct) {
-	//OxGameDebug(OxGame)
 	OxGame.Effects = make([][][]string, 3, 3)
 	for i := 0; i < 3; i++ {
 		OxGame.Effects[i] = make([][]string, 3, 3)
@@ -225,7 +293,6 @@ func OxGameMakeEffect(OxGame *OxGameStruct) {
 			OxGame.Effects[i][j] = make([]string, 5, 5)
 		}
 	}
-	//OxGameDebug(OxGame)
 	for i := 0; i < 3; i++ {
 		for k := 0; k < 3; k++ {
 			for j := 0; j < 5; j++ {
@@ -243,33 +310,25 @@ func OxGameMakeEffect(OxGame *OxGameStruct) {
 	}
 }
 
-func OxGameFirstMessageHard(OxGame *OxGameStruct) {
-	message := ""
-	//OxGameDebug(OxGame)
-	for i := 0; i < 3; i++ {
-		for j := 0; j < 3; j++ {
-			message += ":" + OxGame.Stamps[i][j] + "." + OxGame.Effects[i][j][0] + "." + OxGame.Effects[i][j][1] + "." + OxGame.Effects[i][j][2] + "." + OxGame.Effects[i][j][3] + "." + OxGame.Effects[i][j][4] + ":"
-		}
-		message += "\n"
-	}
-	OxGame.MessageID = api.PostMessage(OxGame.ChannelID, message).Id
-	//OxGameDebug(OxGame)
-}
-
-func OxGameEditMessageHard(OxGame *OxGameStruct) {
-	message := ""
-	for i := 0; i < 3; i++ {
-		for j := 0; j < 3; j++ {
-			message += ":" + OxGame.Stamps[i][j] + "." + OxGame.Effects[i][j][0] + "." + OxGame.Effects[i][j][1] + "." + OxGame.Effects[i][j][2] + "." + OxGame.Effects[i][j][3] + "." + OxGame.Effects[i][j][4] + ":"
-		}
-		message += "\n"
-	}
-	api.EditMessage(OxGame.MessageID, message)
-}
-
 func OxGamePlay(MessageID string, pStamps []payload.MessageStamp) {
 	OxGame := OxGameGet(api.GetMessage(MessageID).ChannelId)
-	//OxGameDebug(OxGame)
+	if OxGame.Setsumei {
+		for k := 0; k < len(pStamps); k++ {
+			stampName := api.GetStamp(pStamps[k].StampID).Name
+			if stampName == OxGameStartStampNormal {
+				OxGame.FastStart = false
+				OxGame.Setsumei = false
+				OxGameInit(OxGame, OxGame.ChannelID)
+			} else if stampName == OxGameStartStampHard {
+				OxGameMakeEffect(OxGame)
+				OxGame.HardMode = true
+				OxGame.FastStart = false
+				OxGame.Setsumei = false
+				OxGameInit(OxGame, OxGame.ChannelID)
+			}
+		}
+		return
+	}
 	if !OxGame.Started {
 		return
 	}
@@ -281,7 +340,6 @@ func OxGamePlay(MessageID string, pStamps []payload.MessageStamp) {
 			for k := 0; k < len(pStamps); k++ {
 				StampId := pStamps[k].StampID
 				if StampId == OxGame.StampIDs[i][j] {
-					//OxGameDebug(OxGame)
 					OxGame.Stamps[i][j] = "@" + api.GetUser(pStamps[k].UserID).Name
 					OxGame.StampIDs[i][j] = "Done"
 					if OxGame.HardMode {
