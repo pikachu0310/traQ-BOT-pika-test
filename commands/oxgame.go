@@ -92,7 +92,6 @@ func OxGameStart(p *payload.MessageCreated, slice []string) {
 			for i := 0; i < 3; i++ {
 				OxGame.StampIDs[i] = make([]string, 3, 3)
 			}
-			api.PostMessage(p.Message.ChannelID, "ゲームを開始します。")
 			OxGameMakeStamps(OxGame)
 			if OxGame.HardMode {
 				OxGameFirstMessageHard(OxGame)
@@ -180,10 +179,40 @@ func OxGameJudge(OxGame *OxGameStruct) {
 		OxGame.Started = false
 		return
 	}
-	if OxGame.Stamps[0][0] != "" && OxGame.Stamps[0][1] != "" && OxGame.Stamps[0][2] != "" &&
-		OxGame.Stamps[1][0] != "" && OxGame.Stamps[1][1] != "" && OxGame.Stamps[1][2] != "" &&
-		OxGame.Stamps[2][0] != "" && OxGame.Stamps[2][1] != "" && OxGame.Stamps[2][2] != "" {
-		api.PostMessage(OxGame.ChannelID, "引き分けです！")
+	if OxGame.StampIDs[0][0] == "Done" && OxGame.StampIDs[0][1] == "Done" && OxGame.StampIDs[0][2] == "Done" &&
+		OxGame.StampIDs[1][0] == "Done" && OxGame.StampIDs[1][1] == "Done" && OxGame.StampIDs[1][2] == "Done" &&
+		OxGame.StampIDs[2][0] == "Done" && OxGame.StampIDs[2][1] == "Done" && OxGame.StampIDs[2][2] == "Done" {
+		names := make([]string, 0, 9)
+		numbers := make([]int, 0, 9)
+		for i := 0; i < 3; i++ {
+			for j := 0; j < 3; j++ {
+				nameNew := true
+				for k := 0; k < len(names); k++ {
+					if OxGame.Stamps[i][j] == names[k] {
+						numbers[k]++
+						nameNew = false
+					}
+				}
+				if nameNew {
+					names = append(names, OxGame.Stamps[i][j])
+					numbers = append(numbers, 1)
+				}
+			}
+		}
+		max := 0
+		for i := 0; i < len(numbers); i++ {
+			if numbers[i] == numbers[max] {
+				rand.Seed(time.Now().UnixNano())
+				if rand.Intn(1) == 0 {
+					max = i
+				}
+			} else if numbers[i] > numbers[max] {
+				max = i
+			}
+		}
+		api.PostMessage(OxGame.ChannelID, names[max]+"の勝ちです！")
+		OxGame.Started = false
+		return
 	}
 }
 
@@ -254,7 +283,7 @@ func OxGamePlay(MessageID string, pStamps []payload.MessageStamp) {
 				if StampId == OxGame.StampIDs[i][j] {
 					//OxGameDebug(OxGame)
 					OxGame.Stamps[i][j] = "@" + api.GetUser(pStamps[k].UserID).Name
-					OxGame.StampIDs[i][j] = "done"
+					OxGame.StampIDs[i][j] = "Done"
 					if OxGame.HardMode {
 						OxGameEditMessageHard(OxGame)
 					} else {
