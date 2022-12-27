@@ -27,6 +27,7 @@ type OxGameStruct struct {
 var OxGameStartStampNormal string = "type_normal"
 var OxGameStartStampHard string = "crying-hard"
 var OxGamePlayingList []*OxGameStruct
+var OxGameVersion string = "1.0.3"
 
 // var Effect = []string{"ex-large", "large", "small", "rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
 // var Effect1 = []string{"ex-large", "large", "small"}
@@ -47,7 +48,7 @@ func OxGameDebug(OxGame *OxGameStruct) {
 func OxGameStart(p *payload.MessageCreated, slice []string) {
 	OxGame := OxGameGet(p.Message.ChannelID)
 	if len(slice) == 1 {
-		message := ":blob_speedy_roll_inverse::blob_speedy_roll_inverse::blob_speedy_roll_inverse:早押しスタンプ:o::x:ゲーム:blob_speedy_roll::blob_speedy_roll::blob_speedy_roll:\n```ルール\nBOTがランダムなスタンプを3x3のマス上に9個表示するので、\n同じスタンプを押して一列揃えたら勝ち！(揃わなかったら最も多かった人からランダム)\n```\nこのメッセージに:type_normal:を押すとノーマルモード\nこのメッセージに:crying-hard:を押すとハードモードで始まるよ！\ntips:``/game start``や``/game start hard``でクイックスタートができるよ！\nタイムが出るのでタイムアタックも！ Enjoy! :party_blob:"
+		message := "## :blob_speedy_roll_inverse::blob_speedy_roll_inverse::blob_speedy_roll_inverse:早押しスタンプ:o::x:ゲーム Ver" + OxGameVersion + ":blob_speedy_roll::blob_speedy_roll::blob_speedy_roll:\n``@BOT_pika_test /game`` と入力することで遊べるよ！\n```\n遊び方 : BOTが3x3のマス上全てにランダムなスタンプを配置するので、\nマスと同じスタンプを押してマスを獲得し、一列揃えたら勝ち！(誰も揃わなかったら最も多かった人からランダム)\n```\n\n#### このメッセージに:type_normal:を押すとノーマルモード\n#### このメッセージに:crying-hard:を押すとハードモードで始まるよ！\n全9マスを埋めるTA(TimeAttack)モードもあるぞ！(↓のコマンドで出来る)(通常時でも全マスが埋まってたらTAモード扱いになる)\ntips:``/game start``,``/game start hard``,``/game ta``,``/game ta hard``でクイックスタート(この文章をスキップ)ができるよ！\nタイムが出るのでタイムアタックとしても楽しんで！ Enjoy! :party_blob:"
 		OxGame.Setsumei = true
 		OxGame.MessageID = api.PostMessage(p.Message.ChannelID, message).Id
 		return
@@ -92,6 +93,7 @@ func OxGameInit(OxGame *OxGameStruct, ChannelID string) {
 	OxGame.Started = true
 	OxGame.ChannelID = ChannelID
 	OxGame.Stamps = make([][]string, 3, 3)
+	OxGame.Setsumei = false
 	for i := 0; i < 3; i++ {
 		OxGame.Stamps[i] = make([]string, 3, 3)
 	}
