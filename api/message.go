@@ -51,3 +51,13 @@ func GetMessage(messageID string) *traq.Message {
 	}
 	return message
 }
+
+func AddMessage(messageId string, content string) {
+	messageContent := GetMessage(messageId).Content
+	EditMessage(messageId, messageContent+content)
+}
+
+func AddMessageWithNewLine(messageId string, content string) {
+	messageContent := GetMessage(messageId).Content
+	EditMessage(messageId, messageContent+"\n"+content)
+}
