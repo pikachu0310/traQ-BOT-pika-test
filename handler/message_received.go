@@ -31,8 +31,6 @@ func MessageReceived() func(p *payload.MessageCreated) {
 			respond(p, "pong")
 		} else if slice[0] == "/oisu" {
 			respond(p, commands.Oisu()+" "+p.Message.User.DisplayName)
-		} else if slice[0] == "/help" {
-			respond(p, "そんなコマンドはないよ")
 		} else if slice[0] == "/stamp" {
 			if slice[1] == "add" {
 				api.AddStamps(p.Message.ID, slice[1])
@@ -54,8 +52,12 @@ func MessageReceived() func(p *payload.MessageCreated) {
 		} else if slice[0] == "/game" {
 			commands.OxGameStart(p, slice)
 		} else if slice[0] == "/edit" {
-			api.EditMessage(p.Message.ID, slice[1])
-			api.EditMessage(slice[1], slice[2])
+			//api.EditMessage(p.Message.ID, slice[1])
+			if len(slice) == 3 {
+				api.EditMessage(slice[1], slice[2])
+			}
+		} else if slice[0] == "/help" {
+			commands.Help(p.Message.ChannelID, slice)
 		}
 	}
 }
