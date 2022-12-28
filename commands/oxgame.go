@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/traPtitech/traq-ws-bot/payload"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -27,7 +28,7 @@ type OxGameStruct struct {
 var OxGameStartStampNormal string = "type_normal"
 var OxGameStartStampHard string = "crying-hard"
 var OxGamePlayingList []*OxGameStruct
-var OxGameVersion string = "1.0.3"
+var OxGameVersion string = "1.0.5"
 
 // var Effect = []string{"ex-large", "large", "small", "rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
 // var Effect1 = []string{"ex-large", "large", "small"}
@@ -45,12 +46,12 @@ func OxGameDebug(OxGame *OxGameStruct) {
 	fmt.Println(OxGame.FastStart)
 }
 
-func OxGameStart(p *payload.MessageCreated, slice []string) {
-	OxGame := OxGameGet(p.Message.ChannelID)
+func OxGameStart(ChannelID string, slice []string) {
+	OxGame := OxGameGet(ChannelID)
 	if len(slice) == 1 {
 		message := "## :blob_speedy_roll_inverse::blob_speedy_roll_inverse::blob_speedy_roll_inverse:早押しスタンプ:o::x:ゲーム Ver" + OxGameVersion + ":blob_speedy_roll::blob_speedy_roll::blob_speedy_roll:\n``@BOT_pika_test /game`` と入力することで遊べるよ！\n```\n遊び方 : BOTが3x3のマス上全てにランダムなスタンプを配置するので、\nマスと同じスタンプを押してマスを獲得し、一列揃えたら勝ち！(誰も揃わなかったら最も多かった人からランダム)\n```\n\n#### このメッセージに:type_normal:を押すとノーマルモード\n#### このメッセージに:crying-hard:を押すとハードモードで始まるよ！\n全9マスを埋めるTA(TimeAttack)モードもあるぞ！(↓のコマンドで出来る)(通常時でも全マスが埋まってたらTAモード扱いになる)\ntips:``/game start``,``/game start hard``,``/game ta``,``/game ta hard``でクイックスタート(この文章をスキップ)ができるよ！\nタイムが出るのでタイムアタックとしても楽しんで！ Enjoy! :party_blob:"
 		OxGame.Setsumei = true
-		OxGame.MessageID = api.PostMessage(p.Message.ChannelID, message).Id
+		OxGame.MessageID = api.PostMessage(ChannelID, message).Id
 		return
 	}
 	if slice[1] == "start" {
@@ -63,15 +64,16 @@ func OxGameStart(p *payload.MessageCreated, slice []string) {
 				}
 			}
 			OxGame.FastStart = true
-			OxGameInit(OxGame, p.Message.ChannelID)
+			OxGameInit(OxGame, ChannelID)
 		} else {
-			api.PostMessage(p.Message.ChannelID, "ゲームはすでに開始されています。")
+			api.PostMessage(ChannelID, "ゲームはすでに開始されています。")
 		}
 	} else if slice[1] == "reset" {
 		OxGameInitCompletely(OxGame)
-		api.PostMessage(p.Message.ChannelID, "ゲームをリセットしました。")
+		api.PostMessage(ChannelID, "ゲームをリセットしました。")
 	} else if slice[1] == "debug" {
 		OxGameDebug(OxGame)
+		api.PostMessage(ChannelID, Debug(OxGame))
 	} else if slice[1] == "timeattack" || slice[1] == "ta" {
 		if !OxGame.Started {
 			OxGame.TimeAttack = true
@@ -82,9 +84,9 @@ func OxGameStart(p *payload.MessageCreated, slice []string) {
 				}
 			}
 			OxGame.FastStart = true
-			OxGameInit(OxGame, p.Message.ChannelID)
+			OxGameInit(OxGame, ChannelID)
 		} else {
-			api.PostMessage(p.Message.ChannelID, "ゲームはすでに開始されています。")
+			api.PostMessage(ChannelID, "ゲームはすでに開始されています。")
 		}
 	}
 }
@@ -354,4 +356,19 @@ func OxGamePlay(MessageID string, pStamps []payload.MessageStamp) {
 		}
 	}
 	OxGameJudge(OxGame)
+}
+
+func Debug(OxGame *OxGameStruct) string {
+	message := ""
+	OxGameDebugType := reflect.TypeOf(*OxGame)
+	OxGameDebugValue := reflect.ValueOf(*OxGame)
+	message += "```\n"
+	for i := 0; i < OxGameDebugType.NumField(); i++ {
+		field := OxGameDebugType.Field(i)
+		value := OxGameDebugValue.Field(i)
+		message += field.Name + ": " + fmt.Sprintf("%v\n", value)
+	}
+	message += "```\n"
+	println(message)
+	return message
 }
