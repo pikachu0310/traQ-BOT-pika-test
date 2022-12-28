@@ -25,43 +25,47 @@ func MessageReceived() func(p *payload.MessageCreated) {
 			slice = slice[1:]
 		}
 
-		if slice[0] == "/slice" {
-			respond(p, strings.Join(slice, ", "))
-		} else if slice[0] == "/ping" {
-			respond(p, "pong")
-		} else if slice[0] == "/oisu" {
-			respond(p, commands.Oisu()+" "+p.Message.User.DisplayName)
-		} else if slice[0] == "/stamp" {
-			if slice[1] == "add" {
-				api.AddStamps(p.Message.ID, slice[1])
-			} else if slice[1] == "remove" {
-				api.RemoveStamp(p.Message.ID, slice[1])
-			}
-		} else if slice[0] == "/allstamps" {
-			allStamps := api.GetAllStamps()
-			stampsRespond := ""
-			num := slice[1]
-			toInt, err := strconv.Atoi(num)
-			if err != nil {
-			} else {
-				for i := 0; i <= toInt; i++ {
-					stampsRespond += ":" + allStamps[i].Name + ":"
-				}
-				respond(p, stampsRespond)
-			}
-		} else if slice[0] == "/game" {
-			commands.OxGameStart(p, slice)
-		} else if slice[0] == "/edit" {
-			//api.EditMessage(p.Message.ID, slice[1])
-			if len(slice) == 3 {
-				api.EditMessage(slice[1], slice[2])
-			}
-		} else if slice[0] == "/help" {
-			commands.Help(p.Message.ChannelID, slice)
-		}
+		CommandReceived(slice, p.Message.ID, p.Message.ChannelID)
 	}
 }
 
-func respond(p *payload.MessageCreated, content string) {
-	api.PostMessage(p.Message.ChannelID, content)
+func CommandReceived(slice []string, MessageID string, ChannelID string) {
+	if slice[0] == "/slice" {
+		respond(ChannelID, strings.Join(slice, ", "))
+	} else if slice[0] == "/ping" {
+		respond(ChannelID, "pong")
+	} else if slice[0] == "/oisu" {
+		commands.Oisu(ChannelID)
+	} else if slice[0] == "/stamp" {
+		if slice[1] == "add" {
+			api.AddStamps(MessageID, slice[1])
+		} else if slice[1] == "remove" {
+			api.RemoveStamp(MessageID, slice[1])
+		}
+	} else if slice[0] == "/allstamps" {
+		allStamps := api.GetAllStamps()
+		stampsRespond := ""
+		num := slice[1]
+		toInt, err := strconv.Atoi(num)
+		if err != nil {
+		} else {
+			for i := 0; i <= toInt; i++ {
+				stampsRespond += ":" + allStamps[i].Name + ":"
+			}
+			respond(ChannelID, stampsRespond)
+		}
+	} else if slice[0] == "/game" {
+		commands.OxGameStart(ChannelID, slice)
+	} else if slice[0] == "/edit" {
+		//api.EditMessage(p.Message.ID, slice[1])
+		if len(slice) == 3 {
+			api.EditMessage(slice[1], slice[2])
+		}
+	} else if slice[0] == "/help" {
+		commands.Help(ChannelID, slice)
+	}
+}
+
+func respond(ChannelID, content string) {
+	api.PostMessage(ChannelID, content)
 }
