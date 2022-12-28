@@ -30,6 +30,9 @@ func MessageReceived() func(p *payload.MessageCreated) {
 }
 
 func CommandReceived(slice []string, MessageID string, ChannelID string) {
+	if len(slice) == 0 {
+		return
+	}
 	if slice[0] == "/slice" {
 		respond(ChannelID, strings.Join(slice, ", "))
 	} else if slice[0] == "/ping" {
@@ -37,12 +40,18 @@ func CommandReceived(slice []string, MessageID string, ChannelID string) {
 	} else if slice[0] == "/oisu" {
 		commands.Oisu(ChannelID)
 	} else if slice[0] == "/stamp" {
+		if len(slice) == 1 {
+			return
+		}
 		if slice[1] == "add" {
 			api.AddStamps(MessageID, slice[1])
 		} else if slice[1] == "remove" {
 			api.RemoveStamp(MessageID, slice[1])
 		}
 	} else if slice[0] == "/allstamps" {
+		if len(slice) == 1 {
+			return
+		}
 		allStamps := api.GetAllStamps()
 		stampsRespond := ""
 		num := slice[1]
