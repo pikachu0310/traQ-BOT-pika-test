@@ -23,12 +23,13 @@ type OxGameStruct struct {
 	StartTime  int64
 	TimeAttack bool
 	PlayerNum  int
+	WinMessage string
 }
 
 var OxGameStartStampNormal string = "type_normal"
 var OxGameStartStampHard string = "crying-hard"
 var OxGamePlayingList []*OxGameStruct
-var OxGameVersion string = "1.0.6"
+var OxGameVersion string = "1.0.8"
 
 // var Effect = []string{"ex-large", "large", "small", "rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
 // var Effect1 = []string{"ex-large", "large", "small"}
@@ -131,6 +132,8 @@ func OxGameInitCompletely(OxGame *OxGameStruct) {
 	OxGame.Setsumei = false
 	OxGame.TimeAttack = false
 	OxGame.StartTime = 0
+	OxGame.PlayerNum = 0
+	OxGame.WinMessage = ""
 }
 
 func OxGameNew(ChannelID string) *OxGameStruct {
@@ -176,6 +179,9 @@ func OxGameEditMessage(OxGame *OxGameStruct) {
 	message := ":" + OxGame.Stamps[0][0] + ": :" + OxGame.Stamps[0][1] + ": :" + OxGame.Stamps[0][2] + ":\n" +
 		":" + OxGame.Stamps[1][0] + ": :" + OxGame.Stamps[1][1] + ": :" + OxGame.Stamps[1][2] + ":\n" +
 		":" + OxGame.Stamps[2][0] + ": :" + OxGame.Stamps[2][1] + ": :" + OxGame.Stamps[2][2] + ":"
+	if OxGame.WinMessage != "" {
+		message += "\n\n" + OxGame.WinMessage
+	}
 	api.EditMessage(OxGame.MessageID, message)
 }
 
@@ -201,6 +207,9 @@ func OxGameEditMessageHard(OxGame *OxGameStruct) {
 			message += ":" + OxGame.Stamps[i][j] + "." + OxGame.Effects[i][j][0] + "." + OxGame.Effects[i][j][1] + "." + OxGame.Effects[i][j][2] + "." + OxGame.Effects[i][j][3] + "." + OxGame.Effects[i][j][4] + ":"
 		}
 		message += "\n"
+	}
+	if OxGame.WinMessage != "" {
+		message += "\n\n" + OxGame.WinMessage
 	}
 	api.EditMessage(OxGame.MessageID, message)
 }
@@ -271,22 +280,17 @@ func OxGameWin(UserName string, OxGame *OxGameStruct) {
 	timeMilliSec := timeResult % 1000
 	if OxGame.TimeAttack {
 		if OxGame.HardMode {
-			message := ":" + UserName + ":の勝ちです！\nタイム(HardTimeAttack): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！" + " / 人数:" + strconv.Itoa(OxGame.PlayerNum)
-			api.AddMessageWithNewLine(OxGame.MessageID, message)
+			OxGame.WinMessage = ":" + UserName + ":の勝ちです！\nタイム(HardTimeAttack): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！" + " / 人数:" + strconv.Itoa(OxGame.PlayerNum)
 		} else {
-			message := ":" + UserName + ":の勝ちです！\nタイム(NormalTimeAttack): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！" + " / 人数:" + strconv.Itoa(OxGame.PlayerNum)
-			api.AddMessageWithNewLine(OxGame.MessageID, message)
+			OxGame.WinMessage = ":" + UserName + ":の勝ちです！\nタイム(NormalTimeAttack): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！" + " / 人数:" + strconv.Itoa(OxGame.PlayerNum)
 		}
 	} else {
 		if OxGame.HardMode {
-			message := ":" + UserName + ":の勝ちです！\nタイム(Hard): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！"
-			api.AddMessageWithNewLine(OxGame.MessageID, message)
+			OxGame.WinMessage = ":" + UserName + ":の勝ちです！\nタイム(Hard): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！"
 		} else {
-			message := ":" + UserName + ":の勝ちです！\nタイム(Normal): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！"
-			api.AddMessageWithNewLine(OxGame.MessageID, message)
+			OxGame.WinMessage = ":" + UserName + ":の勝ちです！\nタイム(Normal): " + strconv.Itoa(int(timeSec)) + "." + strconv.Itoa(int(timeMilliSec)) + "秒でした！"
 		}
 	}
-	OxGameInitCompletely(OxGame)
 }
 
 func OxGameMakeEffect(OxGame *OxGameStruct) {
@@ -353,12 +357,15 @@ func OxGamePlay(MessageID string, pStamps []payload.MessageStamp) {
 		}
 	}
 	OxGameJudge(OxGame)
-	if OxGame.Started && changed {
+	if changed {
 		if OxGame.HardMode {
 			OxGameEditMessageHard(OxGame)
 		} else {
 			OxGameEditMessage(OxGame)
 		}
+	}
+	if OxGame.WinMessage != "" {
+		OxGameInitCompletely(OxGame)
 	}
 }
 
