@@ -28,7 +28,7 @@ type OxGameStruct struct {
 var OxGameStartStampNormal string = "type_normal"
 var OxGameStartStampHard string = "crying-hard"
 var OxGamePlayingList []*OxGameStruct
-var OxGameVersion string = "1.0.5"
+var OxGameVersion string = "1.0.6"
 
 // var Effect = []string{"ex-large", "large", "small", "rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
 // var Effect1 = []string{"ex-large", "large", "small"}
@@ -339,6 +339,7 @@ func OxGamePlay(MessageID string, pStamps []payload.MessageStamp) {
 	if MessageID != OxGame.MessageID {
 		return
 	}
+	changed := false
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
 			for k := 0; k < len(pStamps); k++ {
@@ -346,16 +347,19 @@ func OxGamePlay(MessageID string, pStamps []payload.MessageStamp) {
 				if StampId == OxGame.StampIDs[i][j] {
 					OxGame.Stamps[i][j] = "@" + api.GetUser(pStamps[k].UserID).Name
 					OxGame.StampIDs[i][j] = "Done"
-					if OxGame.HardMode {
-						OxGameEditMessageHard(OxGame)
-					} else {
-						OxGameEditMessage(OxGame)
-					}
+					changed = true
 				}
 			}
 		}
 	}
 	OxGameJudge(OxGame)
+	if OxGame.Started && changed {
+		if OxGame.HardMode {
+			OxGameEditMessageHard(OxGame)
+		} else {
+			OxGameEditMessage(OxGame)
+		}
+	}
 }
 
 func Debug(OxGame *OxGameStruct) string {
