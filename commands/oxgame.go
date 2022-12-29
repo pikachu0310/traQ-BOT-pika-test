@@ -29,7 +29,7 @@ type OxGameStruct struct {
 var OxGameStartStampNormal string = "type_normal"
 var OxGameStartStampHard string = "crying-hard"
 var OxGamePlayingList []*OxGameStruct
-var OxGameVersion string = "1.0.8"
+var OxGameVersion string = "1.0.9"
 
 // var Effect = []string{"ex-large", "large", "small", "rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
 // var Effect1 = []string{"ex-large", "large", "small"}
@@ -50,7 +50,7 @@ func OxGameDebug(OxGame *OxGameStruct) {
 func OxGameStart(ChannelID string, slice []string) {
 	OxGame := OxGameGet(ChannelID)
 	if len(slice) == 1 {
-		message := "## :blob_speedy_roll_inverse::blob_speedy_roll_inverse::blob_speedy_roll_inverse:早押しスタンプ:o::x:ゲーム Ver" + OxGameVersion + ":blob_speedy_roll::blob_speedy_roll::blob_speedy_roll:\n``@BOT_pika_test /game`` と入力することで遊べるよ！\n```\n遊び方 : BOTが3x3のマス上全てにランダムなスタンプを配置するので、\nマスと同じスタンプを押してマスを獲得し、一列揃えたら勝ち！(誰も揃わなかったら最も多かった人からランダム)\n```\n\n#### このメッセージに:type_normal:を押すとノーマルモード\n#### このメッセージに:crying-hard:を押すとハードモードで始まるよ！\n全9マスを埋めるTA(TimeAttack)モードもあるぞ！(↓のコマンドで出来る)(通常時でも全マスが埋まってたらTAモード扱いになる)\ntips:``/game start``,``/game start hard``,``/game ta``,``/game ta hard``でクイックスタート(この文章をスキップ)ができるよ！\nタイムが出るのでタイムアタックとしても楽しんで！ Enjoy! :party_blob:"
+		message := "## :blob_speedy_roll_inverse::blob_speedy_roll_inverse::blob_speedy_roll_inverse:早押しスタンプ:o::x:ゲーム Ver" + OxGameVersion + ":blob_speedy_roll::blob_speedy_roll::blob_speedy_roll:\n``@BOT_pika_test /game`` と入力することで遊べるよ！\n```\n遊び方 : BOTが3x3のマス上全てにランダムなスタンプを配置するので、\nマスと同じスタンプを押してマスを獲得し、一列揃えたら勝ち！(誰も揃わなかったら最も多かった人からランダム)\nスタンプの上にカーソルをホバーさせてスタンプ名を見るのはOKだぞ！\n```\n\n#### このメッセージに:type_normal:を押すとノーマルモード\n#### このメッセージに:crying-hard:を押すとハードモードで始まるよ！\n全9マスを埋めるTA(TimeAttack)モードもあるぞ！(↓のコマンドで出来る)(通常時でも全マスが埋まってたらTAモード扱いになる)\ntips:``/game start``,``/game start hard``,``/game ta``,``/game ta hard``でクイックスタート(この文章をスキップ)ができるよ！\nタイムが出るのでタイムアタックとしても楽しんで！ Enjoy! :party_blob:"
 		OxGame.Setsumei = true
 		OxGame.MessageID = api.PostMessage(ChannelID, message).Id
 		return
@@ -215,26 +215,6 @@ func OxGameEditMessageHard(OxGame *OxGameStruct) {
 }
 
 func OxGameJudge(OxGame *OxGameStruct) {
-	if !OxGame.TimeAttack {
-		for i := 0; i < 3; i++ {
-			if OxGame.Stamps[i][0] == OxGame.Stamps[i][1] && OxGame.Stamps[i][1] == OxGame.Stamps[i][2] {
-				OxGameWin(OxGame.Stamps[i][0], OxGame)
-				return
-			}
-			if OxGame.Stamps[0][i] == OxGame.Stamps[1][i] && OxGame.Stamps[1][i] == OxGame.Stamps[2][i] {
-				OxGameWin(OxGame.Stamps[0][i], OxGame)
-				return
-			}
-		}
-		if OxGame.Stamps[0][0] == OxGame.Stamps[1][1] && OxGame.Stamps[1][1] == OxGame.Stamps[2][2] {
-			OxGameWin(OxGame.Stamps[0][0], OxGame)
-			return
-		}
-		if OxGame.Stamps[0][2] == OxGame.Stamps[1][1] && OxGame.Stamps[1][1] == OxGame.Stamps[2][0] {
-			OxGameWin(OxGame.Stamps[0][2], OxGame)
-			return
-		}
-	}
 	if OxGame.StampIDs[0][0] == "Done" && OxGame.StampIDs[0][1] == "Done" && OxGame.StampIDs[0][2] == "Done" &&
 		OxGame.StampIDs[1][0] == "Done" && OxGame.StampIDs[1][1] == "Done" && OxGame.StampIDs[1][2] == "Done" &&
 		OxGame.StampIDs[2][0] == "Done" && OxGame.StampIDs[2][1] == "Done" && OxGame.StampIDs[2][2] == "Done" {
@@ -270,6 +250,27 @@ func OxGameJudge(OxGame *OxGameStruct) {
 		OxGame.TimeAttack = true
 		OxGameWin(names[max], OxGame)
 		return
+	}
+
+	if !OxGame.TimeAttack {
+		for i := 0; i < 3; i++ {
+			if OxGame.Stamps[i][0] == OxGame.Stamps[i][1] && OxGame.Stamps[i][1] == OxGame.Stamps[i][2] {
+				OxGameWin(OxGame.Stamps[i][0], OxGame)
+				return
+			}
+			if OxGame.Stamps[0][i] == OxGame.Stamps[1][i] && OxGame.Stamps[1][i] == OxGame.Stamps[2][i] {
+				OxGameWin(OxGame.Stamps[0][i], OxGame)
+				return
+			}
+		}
+		if OxGame.Stamps[0][0] == OxGame.Stamps[1][1] && OxGame.Stamps[1][1] == OxGame.Stamps[2][2] {
+			OxGameWin(OxGame.Stamps[0][0], OxGame)
+			return
+		}
+		if OxGame.Stamps[0][2] == OxGame.Stamps[1][1] && OxGame.Stamps[1][1] == OxGame.Stamps[2][0] {
+			OxGameWin(OxGame.Stamps[0][2], OxGame)
+			return
+		}
 	}
 }
 
