@@ -72,6 +72,8 @@ func CommandReceived(slice []string, MessageID string, ChannelID string) {
 		}
 	} else if slice[0] == "/help" {
 		commands.Help(ChannelID, slice)
+	} else if slice[0] == "/sql" {
+		commands.Sql(ChannelID, slice)
 	}
 }
 

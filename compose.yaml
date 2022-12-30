@@ -1,0 +1,23 @@
+version: "3.2"
+services:
+  mysql_test:
+    image: mariadb:10.10.2
+    restart: always
+    environment:
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: pikachu
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - "db-data:/var/lib/mysql"
+    networks:
+      - db_network
+
+volumes:
+  db-data:
+
+networks:
+  db_network:
+    driver: bridge

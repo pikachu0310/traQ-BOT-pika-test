@@ -7,6 +7,8 @@ require (
 	github.com/traPtitech/traq-ws-bot v1.1.2
 )
 
+require github.com/go-sql-driver/mysql v1.7.0 // indirect
+
 require (
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
