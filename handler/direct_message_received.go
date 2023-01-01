@@ -22,6 +22,6 @@ func DirectMessageReceived() func(p *payload.DirectMessageCreated) {
 			slice = slice[1:]
 		}
 
-		CommandReceived(slice, p.Message.ID, p.Message.ChannelID)
+		CommandReceived(slice, p.Message.ID, p.Message.ChannelID, p.Message.User.ID)
 	}
 }

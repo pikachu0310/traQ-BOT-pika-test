@@ -25,11 +25,11 @@ func MessageReceived() func(p *payload.MessageCreated) {
 			slice = slice[1:]
 		}
 
-		CommandReceived(slice, p.Message.ID, p.Message.ChannelID)
+		CommandReceived(slice, p.Message.ID, p.Message.ChannelID, p.Message.User.ID)
 	}
 }
 
-func CommandReceived(slice []string, MessageID string, ChannelID string) {
+func CommandReceived(slice []string, MessageID string, ChannelID string, UserID string) {
 	if len(slice) == 0 {
 		return
 	}
@@ -74,7 +74,10 @@ func CommandReceived(slice []string, MessageID string, ChannelID string) {
 		commands.Help(ChannelID, slice)
 	} else if slice[0] == "/sql" {
 		commands.Sql(ChannelID, slice)
+	} else if slice[0] == "/tag" {
+		commands.Tag(ChannelID, UserID, slice)
 	}
+
 }
 
 func respond(ChannelID, content string) {

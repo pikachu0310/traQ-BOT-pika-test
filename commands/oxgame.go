@@ -29,7 +29,7 @@ type OxGameStruct struct {
 var OxGameStartStampNormal string = "type_normal"
 var OxGameStartStampHard string = "crying-hard"
 var OxGamePlayingList []*OxGameStruct
-var OxGameVersion string = "1.0.9"
+var OxGameVersion string = "1.1.0"
 
 // var Effect = []string{"ex-large", "large", "small", "rotate", "rotate-inv", "wiggle", "parrot", "zoom", "inversion", "turn", "turn-v", "happa", "pyon", "flashy", "pull", "atsumori", "stretch", "stretch-v", "conga", "marquee", "conga-inv", "marquee-inv", "attract", "ascension", "shake", "party", "rainbow"}
 // var Effect1 = []string{"ex-large", "large", "small"}
