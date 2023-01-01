@@ -16,3 +16,27 @@ func GetUser(userID string) *traq.UserDetail {
 	}
 	return User
 }
+
+func GetUsers() []traq.User {
+	bot := util.GetBot()
+	Users, _, err := bot.API().UserApi.GetUsers(context.Background()).Execute()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return Users
+}
+
+// GetUserByUserName 一致するユーザーが見つからなかったら、自分を返す
+func GetUserByUserName(UserName string, UserID string) *traq.User {
+	UserList := GetUsers()
+	meNum := 0
+	for num, user := range UserList {
+		if user.Name == UserName {
+			return &user
+		}
+		if user.Id == UserID {
+			meNum += num
+		}
+	}
+	return &UserList[meNum]
+}
