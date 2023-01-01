@@ -30,7 +30,7 @@ func Tag(ChannelID string, UserID string, slice []string) {
 	}
 	year := time.Now().Year()
 	if len(slice) >= 3 {
-		yearTemp, err := strconv.Atoi("123")
+		yearTemp, err := strconv.Atoi(slice[2])
 		if err != nil {
 			api.PostMessage(ChannelID, "yearを数値に変換できませんでした。")
 			return
