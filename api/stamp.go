@@ -54,3 +54,12 @@ func GetStamp(stampID string) *traq.Stamp {
 	}
 	return stamp
 }
+
+func AddStamp(stamp traq.Stamp) {
+	fmt.Println("AddStamp", stamp)
+	bot := util.GetBot()
+	_, err := bot.API().StampApi.AddMessageStamp(context.Background(), stamp.Id, stamp.Id).Execute()
+	if err != nil {
+		fmt.Println(err)
+	}
+}

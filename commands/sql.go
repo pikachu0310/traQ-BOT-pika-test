@@ -1,24 +1,32 @@
 package commands
 
 import (
-	"database/sql"
+	"example-bot/api"
 	"fmt"
-)
-
-import (
 	_ "github.com/go-sql-driver/mysql"
+	"os/exec"
 )
 
 func Sql(ChannelID string, slice []string) {
 	if len(slice) == 1 {
 		return
 	}
-	// Create the database handle, confirm driver is present
-	db, _ := sql.Open("mysql", "root:password@/mydb")
-	defer db.Close()
-
-	// Connect and check the server version
-	var version string
-	db.QueryRow(slice[1])
-	fmt.Println("Connected to: ", version)
+	sqlSentence := ""
+	for i := 1; i < len(slice); i++ {
+		sqlSentence += slice[i] + " "
+	}
+	out, err := exec.Command("docker", "compose", "exec", "mysql_test", "mysql", "-t", "-N", "-u", "root", "-ppassword", "mydb", "-e", sqlSentence).CombinedOutput()
+	returnSentence := ""
+	returnSentenceAdd := ""
+	if err != nil {
+		returnSentenceAdd = fmt.Sprintf("error: %s", out)
+	} else {
+		returnSentenceAdd = fmt.Sprintf("%s", out)
+	}
+	if len(returnSentenceAdd) == 0 {
+		returnSentence = ":done:"
+	} else {
+		returnSentence = "```\n" + returnSentenceAdd + "\n```"
+	}
+	api.PostMessage(ChannelID, fmt.Sprintf(returnSentence))
 }
