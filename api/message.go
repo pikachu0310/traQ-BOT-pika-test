@@ -25,6 +25,23 @@ func PostMessage(channelID string, content string) *traq.Message {
 	return message
 }
 
+func PostMessageWithErr(channelID string, content string) (*traq.Message, error) {
+
+	bot := util.GetBot()
+
+	message, _, err := bot.API().
+		MessageApi.
+		PostMessage(context.Background(), channelID).
+		PostMessageRequest(traq.PostMessageRequest{
+			Content: content,
+		}).
+		Execute()
+	if err != nil {
+		log.Println(err)
+	}
+	return message, err
+}
+
 func EditMessage(messageID string, content string) {
 
 	bot := util.GetBot()
@@ -60,4 +77,18 @@ func AddMessage(messageId string, content string) {
 func AddMessageWithNewLine(messageId string, content string) {
 	messageContent := GetMessage(messageId).Content
 	EditMessage(messageId, messageContent+"\n"+content)
+}
+
+func GetMessages(text string) *traq.MessageSearchResult {
+
+	bot := util.GetBot()
+
+	messages, _, err := bot.API().
+		MessageApi.
+		SearchMessages(context.Background()).Word(text).
+		Execute()
+	if err != nil {
+		log.Println(err)
+	}
+	return messages
 }

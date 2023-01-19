@@ -26,7 +26,10 @@ func Sql(ChannelID string, slice []string) {
 	if len(returnSentenceAdd) == 0 {
 		returnSentence = ":done:"
 	} else {
-		returnSentence = "```\n" + returnSentenceAdd + "\n```"
+		returnSentence = "```\n" + returnSentenceAdd + "```"
 	}
-	api.PostMessage(ChannelID, fmt.Sprintf(returnSentence))
+	_, err = api.PostMessageWithErr(ChannelID, fmt.Sprintf(returnSentence))
+	if err != nil {
+		api.PostMessage(ChannelID, fmt.Sprintf("PostError: %s", out))
+	}
 }
