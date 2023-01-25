@@ -76,6 +76,8 @@ func CommandReceived(slice []string, MessageID string, ChannelID string, UserID 
 		commands.Sql(ChannelID, slice)
 	} else if slice[0] == "/tag" {
 		commands.Tag(ChannelID, UserID, slice)
+	} else if slice[0] == "/docker" {
+		commands.Docker(ChannelID, slice)
 	}
 
 }

@@ -30,6 +30,6 @@ func Sql(ChannelID string, slice []string) {
 	}
 	_, err = api.PostMessageWithErr(ChannelID, fmt.Sprintf(returnSentence))
 	if err != nil {
-		api.PostMessage(ChannelID, fmt.Sprintf("PostError: %s", out))
+		api.PostMessage(ChannelID, err.Error())
 	}
 }
