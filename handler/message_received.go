@@ -10,6 +10,82 @@ import (
 	"github.com/traPtitech/traq-ws-bot/payload"
 )
 
+const prefix = "/"
+
+type CommandFunc = func(args commands.Args)
+
+var commandsMap map[string]CommandFunc
+
+func init() {
+	commandsMap = map[string]CommandFunc{
+		"slice": func(args commands.Args) {
+			respond(args.ChannelID, strings.Join(args.Slice, ", "))
+		},
+		"ping": func(args commands.Args) {
+			respond(args.ChannelID, "pong")
+		},
+		"oisu": func(args commands.Args) {
+			commands.Oisu(args.ChannelID)
+		},
+		"stamp": func(args commands.Args) {
+			if len(args.Slice) <= 2 {
+				return
+			}
+			verb := args.Slice[1]
+			stampID := args.Slice[2]
+			switch verb {
+			case "add":
+				api.AddStamps(args.MessageID, stampID)
+			case "remove":
+				api.RemoveStamp(args.MessageID, stampID)
+			}
+		},
+		"allstamps": func(args commands.Args) {
+			if len(args.Slice) == 1 {
+				return
+			}
+
+			num := args.Slice[1]
+			toInt, err := strconv.Atoi(num)
+			if err != nil {
+				return
+			}
+
+			allStamps := api.GetAllStamps()
+			// const stampsRespond = allStamps.takeFirstN(num).map((stamp) => `:${stamp.Name}:`).join("")
+			stampsRespond := ""
+			for i := 0; i <= toInt; i++ {
+				stampsRespond += ":" + allStamps[i].Name + ":"
+			}
+			respond(args.ChannelID, stampsRespond)
+		},
+		"game": func(args commands.Args) {
+			commands.OxGameStart(args.ChannelID, args.Slice)
+		},
+		"edit": func(args commands.Args) {
+			//api.EditMessage(p.Message.ID, slice[1])
+			if len(args.Slice) == 3 {
+				api.EditMessage(args.Slice[1], args.Slice[2])
+			}
+		},
+		"help": func(args commands.Args) {
+			commands.Help(args.ChannelID, args.Slice)
+		},
+		"sql": func(args commands.Args) {
+			commands.Sql(args.ChannelID, args.Slice)
+		},
+		"tag": func(args commands.Args) {
+			commands.Tag(args.ChannelID, args.UserID, args.Slice)
+		},
+		"docker": func(args commands.Args) {
+			commands.Docker(args.ChannelID, args.Slice)
+		},
+		//"stamps": func(args commands.Args) {
+		//	commands.Stamps(args)
+		//},
+	}
+}
+
 func MessageReceived() func(p *payload.MessageCreated) {
 	return func(p *payload.MessageCreated) {
 		log.Println("=================================================")
@@ -33,53 +109,22 @@ func CommandReceived(slice []string, MessageID string, ChannelID string, UserID 
 	if len(slice) == 0 {
 		return
 	}
-	if slice[0] == "/slice" {
-		respond(ChannelID, strings.Join(slice, ", "))
-	} else if slice[0] == "/ping" {
-		respond(ChannelID, "pong")
-	} else if slice[0] == "/oisu" {
-		commands.Oisu(ChannelID)
-	} else if slice[0] == "/stamp" {
-		if len(slice) == 1 {
-			return
-		}
-		if slice[1] == "add" {
-			api.AddStamps(MessageID, slice[1])
-		} else if slice[1] == "remove" {
-			api.RemoveStamp(MessageID, slice[1])
-		}
-	} else if slice[0] == "/allstamps" {
-		if len(slice) == 1 {
-			return
-		}
-		allStamps := api.GetAllStamps()
-		stampsRespond := ""
-		num := slice[1]
-		toInt, err := strconv.Atoi(num)
-		if err != nil {
-		} else {
-			for i := 0; i <= toInt; i++ {
-				stampsRespond += ":" + allStamps[i].Name + ":"
-			}
-			respond(ChannelID, stampsRespond)
-		}
-	} else if slice[0] == "/game" {
-		commands.OxGameStart(ChannelID, slice)
-	} else if slice[0] == "/edit" {
-		//api.EditMessage(p.Message.ID, slice[1])
-		if len(slice) == 3 {
-			api.EditMessage(slice[1], slice[2])
-		}
-	} else if slice[0] == "/help" {
-		commands.Help(ChannelID, slice)
-	} else if slice[0] == "/sql" {
-		commands.Sql(ChannelID, slice)
-	} else if slice[0] == "/tag" {
-		commands.Tag(ChannelID, UserID, slice)
-	} else if slice[0] == "/docker" {
-		commands.Docker(ChannelID, slice)
-	}
 
+	// check prefix
+	commandName := slice[0]
+	if !strings.HasPrefix(commandName, prefix) {
+		return
+	}
+	commandName = commandName[len(prefix):] // strip prefix
+
+	if cmd, ok := commandsMap[commandName]; ok {
+		cmd(commands.Args{
+			Slice:     slice,
+			MessageID: MessageID,
+			ChannelID: ChannelID,
+			UserID:    UserID,
+		})
+	}
 }
 
 func respond(ChannelID, content string) {

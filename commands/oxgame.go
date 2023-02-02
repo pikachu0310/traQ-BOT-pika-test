@@ -117,23 +117,24 @@ func OxGameInit(OxGame *OxGameStruct, ChannelID string) {
 }
 
 func OxGameInitCompletely(OxGame *OxGameStruct) {
-	OxGame.Started = false
-	OxGame.MessageID = ""
-	OxGame.Stamps = make([][]string, 3, 3)
-	for i := 0; i < 3; i++ {
-		OxGame.Stamps[i] = make([]string, 3, 3)
-	}
-	OxGame.StampIDs = make([][]string, 3, 3)
-	for i := 0; i < 3; i++ {
-		OxGame.StampIDs[i] = make([]string, 3, 3)
-	}
-	OxGame.HardMode = false
-	OxGame.FastStart = false
-	OxGame.Setsumei = false
-	OxGame.TimeAttack = false
-	OxGame.StartTime = 0
-	OxGame.PlayerNum = 0
-	OxGame.WinMessage = ""
+	*OxGame = OxGameStruct{ChannelID: OxGame.ChannelID}
+	//OxGame.Started = false
+	//OxGame.MessageID = ""
+	//OxGame.Stamps = make([][]string, 3, 3)
+	//for i := 0; i < 3; i++ {
+	//	OxGame.Stamps[i] = make([]string, 3, 3)
+	//}
+	//OxGame.StampIDs = make([][]string, 3, 3)
+	//for i := 0; i < 3; i++ {
+	//	OxGame.StampIDs[i] = make([]string, 3, 3)
+	//}
+	//OxGame.HardMode = false
+	//OxGame.FastStart = false
+	//OxGame.Setsumei = false
+	//OxGame.TimeAttack = false
+	//OxGame.StartTime = 0
+	//OxGame.PlayerNum = 0
+	//OxGame.WinMessage = ""
 }
 
 func OxGameNew(ChannelID string) *OxGameStruct {
