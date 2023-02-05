@@ -148,11 +148,21 @@ func CommandReceived(text, MessageID string, ChannelID string, UserID string) {
 }
 
 func commandsV2(args commands.ArgsV2) {
+
+	joinStampMatch := regexp.MustCompile(`join|いらっしゃい|oisu-|:oisu-1::oisu-2::oisu-3::oisu-4yoko:|おいすー`)
+	leaveStampMatch := regexp.MustCompile(`leave|さようなら|:wave:|ばいばい`)
 	mentionMatch := regexp.MustCompile(`@BOT_pika_test`)
+	if mentionMatch.MatchString(args.MessageText) {
+		if joinStampMatch.MatchString(args.MessageText) {
+			commands.BotJoin(args)
+		} else if leaveStampMatch.MatchString(args.MessageText) {
+			commands.BotLeave(args)
+		}
+	}
 	args.MessageText = mentionMatch.ReplaceAllString(args.MessageText, "")
 
-	magStampMatch := regexp.MustCompile(`:mag(|_right)(\.[a-zA-Z_-]+)*:`)
-	println(magStampMatch.MatchString(args.MessageText))
+	magStampMatch := regexp.MustCompile(`:(mag(|_right)|Internet_Explorer)(\.[a-zA-Z_-]+)*:`)
+
 	if magStampMatch.MatchString(args.MessageText) {
 		textForSearch := magStampMatch.ReplaceAllString(args.MessageText, "")
 		args.MessageText = textForSearch
