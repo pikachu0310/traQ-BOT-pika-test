@@ -49,7 +49,7 @@ func StampInfo(stampName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("スタンプUUID: %s\nスタンプ名: %s\n(pattern: ^[a-zA-Z0-9_-]{1,32}$)\n作成者UUID: %s\n作成日時: %s\n更新日時: %s\nファイルUUID: %s\nUnicode絵文字か: %s", stamp.Id, stamp.Id, stamp.CreatorId, stamp.CreatedAt, stamp.UpdatedAt, stamp.FileId, stamp.IsUnicode), nil
+	return fmt.Sprintf("|                            |     |     |\n| -------------------------- | --- | --- |\n| **スタンプ名**             | %s  |  pattern: `^[a-zA-Z0-9_-]{1,32}$`   |\n| **スタンプUUID**         | `%s`  |     |\n| **作成者UUID**           | `%s`  |     |\n| **作成日時**   | `%s`  |     |\n| **更新日時**            | `%s`  |     |\n| **ファイルUUID** | `%s` |     |\n| **Unicode絵文字か**               | %v  |     |\n", stamp.Name, stamp.Id, stamp.CreatorId, stamp.CreatedAt, stamp.UpdatedAt, stamp.FileId, stamp.IsUnicode), nil
 }
 
 func UserInfo(userName string) (string, error) {
@@ -57,7 +57,7 @@ func UserInfo(userName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("ユーザーUUID: %s\nユーザー名: %s\n(pattern: ^[a-zA-Z0-9_-]{1,32}$)\nユーザー表示名: %s\n(minLength: 0, maxLength: 32)\nアイコンファイルUUID: %s\nBOTかどうか: %s\nユーザーアカウント状態 0: 停止 1: 有効 2: 一時停止: %s\n更新日時: %s", user.Id, user.Name, user.DisplayName, user.IconFileId, user.Bot, user.State, user.UpdatedAt), nil
+	return fmt.Sprintf("|                            |     |     |\n| -------------------------- | --- | --- |\n| **ユーザー名**             | %s  |  pattern: `^[a-zA-Z0-9_-]{1,32}$`   |\n| **ユーザー表示名**         | %s  |  minLength: 0, maxLength: 32   |\n| **ユーザーUUID**           | `%s`  |     |\n| **アイコンファイルUUID**   | `%s`  |     |\n| **BOTかどうか**            | %t  |     |\n| **ユーザーアカウント状態** | %#v |    0: 停止 1: 有効 2: 一時停止 |\n| **更新日時**               | `%s`  |     |\n", user.Name, user.DisplayName, user.Id, user.IconFileId, user.Bot, user.State, user.UpdatedAt), nil
 }
 
 func notFound(args Args) {
