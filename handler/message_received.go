@@ -4,6 +4,7 @@ import (
 	"example-bot/api"
 	"example-bot/commands"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -83,6 +84,18 @@ func init() {
 		//"stamps": func(args commands.Args) {
 		//	commands.Stamps(args)
 		//},
+		//"search": func(args commands.Args) {
+		//	commands.Search(args)
+		//},
+		//"s": func(args commands.Args) {
+		//	commands.Search(args)
+		//},
+		"info": func(args commands.Args) {
+			commands.Info(args)
+		},
+		"id": func(args commands.Args) {
+			commands.Info(args)
+		},
 	}
 }
 
@@ -94,18 +107,25 @@ func MessageReceived() func(p *payload.MessageCreated) {
 		log.Println("Message:" + p.Message.Text)
 		log.Printf("Payload:"+"%+v", p)
 
-		text := p.Message.PlainText
-		slice := strings.Split(text, " ")
-
-		if slice[0] == "@BOT_pika_test" {
-			slice = slice[1:]
+		if p.Message.User.Bot {
+			return
 		}
 
-		CommandReceived(slice, p.Message.ID, p.Message.ChannelID, p.Message.User.ID)
+		CommandReceived(p.Message.PlainText, p.Message.ID, p.Message.ChannelID, p.Message.User.ID)
 	}
 }
 
-func CommandReceived(slice []string, MessageID string, ChannelID string, UserID string) {
+func CommandReceived(text, MessageID string, ChannelID string, UserID string) {
+
+	args := commands.ArgsV2{MessageText: text, MessageID: MessageID, ChannelID: ChannelID, UserID: UserID}
+	commandsV2(args)
+
+	slice := strings.Split(text, " ")
+
+	if slice[0] == "@BOT_pika_test" {
+		slice = slice[1:]
+	}
+
 	if len(slice) == 0 {
 		return
 	}
@@ -124,6 +144,19 @@ func CommandReceived(slice []string, MessageID string, ChannelID string, UserID 
 			ChannelID: ChannelID,
 			UserID:    UserID,
 		})
+	}
+}
+
+func commandsV2(args commands.ArgsV2) {
+	mentionMatch := regexp.MustCompile(`@BOT_pika_test`)
+	args.MessageText = mentionMatch.ReplaceAllString(args.MessageText, "")
+
+	magStampMatch := regexp.MustCompile(`:mag(|_right)(\.[a-zA-Z_-]+)*:`)
+	println(magStampMatch.MatchString(args.MessageText))
+	if magStampMatch.MatchString(args.MessageText) {
+		textForSearch := magStampMatch.ReplaceAllString(args.MessageText, "")
+		args.MessageText = textForSearch
+		commands.Search(args)
 	}
 }
 
