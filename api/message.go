@@ -55,6 +55,17 @@ func EditMessage(messageID string, content string) {
 	}
 }
 
+func EditMessageWithErr(messageID string, content string) error {
+
+	bot := util.GetBot()
+
+	_, err := bot.API().
+		MessageApi.EditMessage(context.Background(), messageID).PostMessageRequest(traq.PostMessageRequest{
+		Content: content,
+	}).Execute()
+	return err
+}
+
 func GetMessage(messageID string) *traq.Message {
 
 	bot := util.GetBot()
