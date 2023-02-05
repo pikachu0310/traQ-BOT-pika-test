@@ -16,7 +16,7 @@ func Tag(ChannelID string, UserID string, slice []string) {
 		UserName = api.GetUser(UserID).Name
 	}
 	if len(slice) >= 2 {
-		user := api.GetUserByUserName(slice[1], UserID)
+		user := api.GetUserByUserNameWithMe(slice[1], UserID)
 		if user.Id == UserID {
 			if slice[1] != user.Name {
 				api.PostMessage(ChannelID, "UserNameと一致するユーザーが見つからりませんでした。")
