@@ -8,12 +8,12 @@ traQの @BOT_pika-test の全て
 ![image.png](https://wiki.trap.jp/files/63dfe07ec50373001473b24c)
 現場: https://q.trap.jp/messages/57e4a5c6-90d5-4ea2-ac81-51558648fe29
 
-皆がどんなことをやろうとしたのかという[講習会が開かれました](https://q.trap.jp/channels/event/workshop/pika_test/jikkyo)
+皆がどんなことをやろうとしたのかという[講習会が開かれました](https://q.trap.jp/channels/event/workshop/pika_test/jikkyo)(:@oribe:さんに感謝)
 
 ## その後の殺害事件
 [悪魔による殺害現場](https://q.trap.jp/messages/6ba46260-f33c-4f40-b4a0-81e284e8e669)
 ![image.png](https://wiki.trap.jp/files/63dfdfddc50373001473b249)
-[:@kegra:さんがえげつある漫画を描いてくれました！](https://q.trap.jp/messages/0cd39714-5e9f-4bf3-a218-440fe168af3a)
+[:@kegra:さんによるえげつある漫画](https://q.trap.jp/messages/0cd39714-5e9f-4bf3-a218-440fe168af3a)
 ![image.png](https://wiki.trap.jp/files/63dfde61c50373001473b244)
 ![image.png](https://wiki.trap.jp/files/63dfde67c50373001473b245)
 ![image.png](https://wiki.trap.jp/files/63dfde8ec50373001473b248)
@@ -30,10 +30,23 @@ traQの @BOT_pika-test の全て
 | /info    | /info [人物名]                              | /info :@pikachu:                        | ユーザーかスタンプの詳細を表示するぞ！   |
 | join     |                             メンション必須                |  @BOT_pika_test join                                       |                                    BOTがチャンネルに参加する      |
 | leave    |           メンション必須                                  |                            @BOT_pika_test leave            |               BOTがチャンネルから抜ける                           |
+| help | /help | /help | これを表示するぞ！ |
 
 
-より詳しい説明を書くの力尽きた(これ書いてるの期末当日AM3:00)ので、コマンドをリストアップしておく
+## 詳細
 ### /game (早押しスタンプゲーム)
+![image.png](https://wiki.trap.jp/files/63dff8aac50373001473b251)
+遊び方 : BOTが3x3のマス上全てにランダムなスタンプを配置するので、
+マスと同じスタンプを押してマスを獲得し、一列揃えたら勝ち！(誰も揃わなかったら最も多かった人からランダム)
+スタンプの上にカーソルをホバーさせてスタンプ名を見るのはOKだぞ！
+
+現状normalは:@shobon:君の[5.152秒が最速記録](https://q.trap.jp/messages/87045a1c-9cf8-48ac-b18c-e982cb680fab)
+1列揃えば終わるnormalモードと、全9マスが埋まり終わるまで終わらないtimeAttackモードがある。
+また、通常のスタンプのnormalモードとスタンプにエフェクトが5個付くhardモードがある。
+なので、タイムアタックとしては、normal、timeAttack、hard、timeAttackHardの4種類が存在する。
+timeAttackに関しては参加した人数も記録されるので、平等な条件で比較することもできる。
+是非タイムアタックとしても、バトルとしても楽しんで貰いたい！(深夜にやるとめっちゃ面白い系の奴なので)
+
 - /game
 - /game start
 - /game start hard
@@ -45,11 +58,16 @@ traQの @BOT_pika-test の全て
 - /gane debug
 
 ### /tag (タグ一覧を表示)
+![image.png](https://wiki.trap.jp/files/63dff8fac50373001473b252)
+
+今年につけられたタグを振り返ろう！ということで作った機能。タグが付けられた日時も分かるので、タグで1年を振り返ってみよう！
 - /tag
 - /tag pikachu
 - /tag pikachu 2022
 
 ### /sql (公開bash)
+![image.png](https://wiki.trap.jp/files/63dff92ec50373001473b253)
+データベースの操作で使うsqlを任意実行できる機能。何やら悪さができるらしいぞ...？
 - /sql [sql文]
 - /sql system [bash文]
 - /docker up
@@ -57,13 +75,17 @@ traQの @BOT_pika-test の全て
 - /docker restart
 
 ### mag (I'm feeling luckyする)
-- :mag:あいうえお
-- あい:mag:うえお
-- あいうえお:mag:
-- あい:mag_right:うえお
-- あい:Internet_Explorer:うえお
+![image.png](https://wiki.trap.jp/files/63dff99bc50373001473b254)
+googleの検索結果の一番上のURLを出力します。vsきなの
+- :mag:あいうえお かきく
+- あい:mag:うえお かきく
+- あいうえお:mag: かきく
+- あい:mag_right:うえお かきく
+- あい:Internet_Explorer:うえお かきく
 
 ### info (詳細を表示)
+![image.png](https://wiki.trap.jp/files/63dffa2fc50373001473b255)
+ユーザーまたはスタンプの詳細を出力する。UUIDをサッと知りたいときに便利かも
 - /info pikachu
 - /info :pikachu:
 - /info :@pikachu:
@@ -76,13 +98,7 @@ traQの @BOT_pika-test の全て
 - @BOT_pika_test leave
 - (leave|さようなら|:wave:|ばいばい) のいずれかなら反応する
 
-#### ↓古いhelpだが、情報量は多い方が良いかもしれないので、一応乗せておく↓
-# :@BOT_pika_test:Ver1.1.0 コマンド一覧
-※ []で囲まれている内容は省略可能
-## `@BOT_pika_test /game [start/timeattack/ta/reset/debug] [hard]`
--   早押しスタンプ:o::x:ゲーム で遊ぼう！ 詳細は`@BOT_pika_test /game`と入力すると分かるぞ！
-### `@BOT_pika_test /tag [UserName] [Year]`
--   今年につけられたタグ一覧をみて今年を振り返ろう！(UserNameとYearを指定することもできるぞ！)
+#### ここから古いhelpからの引用(あまり使わないコマンド)
 #### `@BOT_pika_test /oisu`
 -   :oisu-1::oisu-2::oisu-3::oisu-4yoko:の順番を混ぜて:oisu-1::oisu-4yoko::oisu-3::oisu-2:するぞ！
 #### `@BOT_pika_test /ping`
@@ -107,3 +123,4 @@ traQの @BOT_pika-test の全て
 | /info    | /info [人物名]                              | /info :@pikachu:                        | ユーザーかスタンプの詳細を表示するぞ！   |
 | join     |                             メンション必須                |  @BOT_pika_test join                                       |                                    BOTがチャンネルに参加する      |
 | leave    |           メンション必須                                  |                            @BOT_pika_test leave            |               BOTがチャンネルから抜ける                           |
+| help | /help | /help | これを表示するぞ！ |
