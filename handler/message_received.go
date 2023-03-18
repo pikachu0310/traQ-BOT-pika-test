@@ -180,6 +180,14 @@ func commandsV2(args commands.ArgsV2) {
 		commands.Search(args)
 		return
 	}
+
+	chatgptStampMatch := regexp.MustCompile(`(\/chat)|(\/chatgpt)|(\/gpt)|(:chatgpt(\.[a-zA-Z_-]+)*:)`)
+	if chatgptStampMatch.MatchString(args.MessageText) {
+		textForSearch := chatgptStampMatch.ReplaceAllString(args.MessageText, "")
+		args.MessageText = textForSearch
+		commands.ChatGPT(args)
+		return
+	}
 }
 
 func respond(ChannelID, content string) {

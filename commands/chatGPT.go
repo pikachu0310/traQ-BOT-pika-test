@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"encoding/json"
+	"example-bot/api"
 	"example-bot/util"
 	"fmt"
 	"io"
@@ -47,7 +48,11 @@ const openaiURL = "https://api.openai.com/v1/chat/completions"
 
 var InputMessages []Message = make([]Message, 0)
 
-func chatGPT(input string) string {
+func ChatGPT(args ArgsV2) {
+	api.PostMessage(args.ChannelID, PostApiAndGetResponseText(args.MessageText))
+}
+
+func PostApiAndGetResponseText(input string) string {
 	response, err := getOpenaiResponse(input)
 	if err != nil {
 		fmt.Println("Error:", err)
