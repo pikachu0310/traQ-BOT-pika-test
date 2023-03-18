@@ -14,8 +14,10 @@ import (
 const prefix = "/"
 
 type CommandFunc = func(args commands.Args)
+type CommandFuncV2 = func(args commands.ArgsV2)
 
 var commandsMap map[string]CommandFunc
+var commandsMapV2 map[string]CommandFuncV2
 
 func init() {
 	commandsMap = map[string]CommandFunc{
@@ -97,6 +99,12 @@ func init() {
 			commands.Info(args)
 		},
 	}
+
+	commandsMapV2 = map[string]CommandFuncV2{
+		"test": func(args commands.ArgsV2) {
+			commands.GetTitle(args)
+		},
+	}
 }
 
 func MessageReceived() func(p *payload.MessageCreated) {
@@ -145,6 +153,10 @@ func CommandReceived(text, MessageID string, ChannelID string, UserID string) {
 			UserID:    UserID,
 		})
 	}
+
+	if cmd, ok := commandsMapV2[commandName]; ok {
+		cmd(args)
+	}
 }
 
 func commandsV2(args commands.ArgsV2) {
@@ -162,11 +174,11 @@ func commandsV2(args commands.ArgsV2) {
 	args.MessageText = mentionMatch.ReplaceAllString(args.MessageText, "")
 
 	magStampMatch := regexp.MustCompile(`:(mag(|_right)|Internet_Explorer)(\.[a-zA-Z_-]+)*:`)
-
 	if magStampMatch.MatchString(args.MessageText) {
 		textForSearch := magStampMatch.ReplaceAllString(args.MessageText, "")
 		args.MessageText = textForSearch
 		commands.Search(args)
+		return
 	}
 }
 
