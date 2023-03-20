@@ -9,7 +9,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 )
 
 type OpenaiRequest struct {
@@ -50,13 +49,13 @@ const openaiURL = "https://api.openai.com/v1/chat/completions"
 var InputMessages []Message = make([]Message, 0)
 
 func ChatGPT(args ArgsV2) {
-	chatgptStampMatch := regexp.MustCompile(`(new(chat|gpt|chatgpt)|(chat|gpt|chatgpt)new|new (chat|gpt|chatgpt)|(chat|gpt|chatgpt) new)`)
-	if chatgptStampMatch.MatchString(args.MessageText) {
-		InputMessages = make([]Message, 0)
-		api.PostMessage(args.ChannelID, PostApiAndGetResponseText("今までの会話履歴を削除し、リセットしました"))
-		return
-	}
 	api.PostMessage(args.ChannelID, PostApiAndGetResponseText(args.MessageText))
+}
+
+func ChatGPTReset(args ArgsV2) {
+	InputMessages = make([]Message, 0)
+	api.PostMessage(args.ChannelID, PostApiAndGetResponseText("今までの会話履歴を削除し、リセットしました"))
+	return
 }
 
 func PostApiAndGetResponseText(input string) string {
