@@ -62,13 +62,21 @@ var Responses []OpenaiResponse = make([]OpenaiResponse, 0)
 
 func ChatGPT(args ArgsV2) {
 	msg := api.PostMessage(args.ChannelID, blobs[rand.Intn(len(blobs))]+":loading:")
-	api.EditMessage(msg.Id, PostApiAndGetResponseTextAndRetryWhenError(msg, args.MessageText))
+	response, err := PostApiAndGetResponseAndRetryWhenError(msg, args.MessageText)
+	if err != nil {
+		api.EditMessage(msg.Id, "Error: "+fmt.Sprint(err))
+	}
+	api.EditMessage(msg.Id, response.Text())
 }
 
 func ChatGPTReset(args ArgsV2) {
 	msg := api.PostMessage(args.ChannelID, ":blobnom::loading:")
 	Messages = make([]Message, 0)
-	api.EditMessage(msg.Id, PostApiAndGetResponseTextAndRetryWhenError(msg, "ユーザーに向けて、<今までの会話履歴を削除し、リセットしました>という旨の文を返してください 謝る必要はありません ダブルクォーテーションも必要ありません"))
+	response, err := PostApiAndGetResponseAndRetryWhenError(msg, "ユーザーに向けて、<今までの会話履歴を削除し、リセットしました>という旨の文を返してください 謝る必要はありません ダブルクォーテーションも必要ありません")
+	if err != nil {
+		api.EditMessage(msg.Id, "Error: "+fmt.Sprint(err))
+	}
+	api.EditMessage(msg.Id, response.Text())
 	Messages = make([]Message, 0)
 	Responses = make([]OpenaiResponse, 0)
 	return
@@ -96,39 +104,63 @@ func ChatGPTDebug(args ArgsV2) {
 	api.PostMessage(args.ChannelID, returnString)
 }
 
-func PostApiAndGetResponseTextAndRetryWhenError(msg *traq.Message, input string) string {
-	responseText, err := PostApiAndGetResponseText(input)
-	if err != nil {
-		if err == JsonError {
+func PostApiAndGetResponseAndRetryWhenError(msg *traq.Message, input string) (OpenaiResponse, error) {
+	response, err := PostApiAndGetResponse(input)
+	for i := 0; overTokenCheck(response) && i <= 4; i++ {
+		api.EditMessage(msg.Id, "Clearing recent history and retrying.["+fmt.Sprintf("%d", i+1)+"] :loading:")
+		if len(Messages) >= 5 {
+			Messages = Messages[4:]
+			Messages = Messages[:len(Messages)-1]
+		} else if len(Messages) >= 2 {
+			Messages = Messages[1:]
+			Messages = Messages[:len(Messages)-1]
+		} else if len(Messages) >= 1 {
+			Messages = Messages[1:]
+		}
+		response, err = PostApiAndGetResponse(input)
+		if err != nil {
 			api.EditMessage(msg.Id, "Error:"+fmt.Sprint(err)+"\nRETRYING :thonk_sweat: :loading::loading::loading:")
-			responseText2, err2 := PostApiAndGetResponseText(input)
-			if err2 != nil {
-				return "Error:" + fmt.Sprint(err) + "\nError:" + fmt.Sprint(err2)
-			}
-			return responseText2
-		} else {
-			return "Error:" + fmt.Sprint(err)
+			return Retry(msg, input, err)
 		}
 	}
-	return responseText
+	if err != nil {
+		api.EditMessage(msg.Id, "Error:"+fmt.Sprint(err)+"\nRETRYING :thonk_sweat: :loading::loading::loading:")
+		return Retry(msg, input, err)
+	}
+	return response, nil
 }
 
-func PostApiAndGetResponseText(input string) (string, error) {
+func Retry(msg *traq.Message, input string, err error) (OpenaiResponse, error) {
+	response, err2 := PostApiAndGetResponse(input)
+	if err2 != nil {
+		return response, errors.New(fmt.Sprint(err) + "\nError:" + fmt.Sprint(err2))
+	}
+	return response, nil
+}
+
+// overToken -> true
+func overTokenCheck(response OpenaiResponse) bool {
+	if len(response.Choices) == 0 {
+		return true
+	}
+	if response.Choices[0].FinishReason == "length" {
+		return true
+	}
+	return false
+}
+
+func PostApiAndGetResponse(input string) (OpenaiResponse, error) {
 	response, err := getOpenaiResponse(input)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return response.Result(), err
+		return response, err
 	}
 	Responses = append(Responses, response)
-	return response.Result(), nil
-}
-
-func (response OpenaiResponse) Result() string {
-	response.AddText()
-	return response.Text()
+	return response, nil
 }
 
 func (response OpenaiResponse) Text() string {
+	response.AddText()
 	if len(response.Choices) >= 1 {
 		return response.Choices[0].Message.Content
 	}
@@ -138,7 +170,7 @@ func (response OpenaiResponse) Text() string {
 func (response OpenaiResponse) AddText() {
 	Messages = append(Messages, Message{
 		Role:    "assistant",
-		Content: response.Text(),
+		Content: response.Choices[0].Message.Content,
 	})
 }
 
