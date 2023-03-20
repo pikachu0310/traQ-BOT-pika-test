@@ -3,12 +3,16 @@ package commands
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"example-bot/api"
 	"example-bot/util"
 	"fmt"
+	"github.com/traPtitech/go-traq"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
+	"regexp"
 )
 
 type OpenaiRequest struct {
@@ -43,28 +47,80 @@ type Usage struct {
 
 var apiKey = util.GetApiKey()
 
+var (
+	JsonError  = errors.New("Error:invalid character '<' looking for beginning of value")
+	TokenError = errors.New("Error: TokenOver")
+)
+
 const model = "gpt-3.5-turbo"
 const openaiURL = "https://api.openai.com/v1/chat/completions"
 
-var InputMessages []Message = make([]Message, 0)
+var blobs = [...]string{":blob_bongo:", ":blob_crazy_happy:", ":blob_grin:", ":blob_hype:", ":blob_love:", ":blob_lurk:", ":blob_pyon:", ":blob_pyon_inverse:", ":blob_slide:", ":blob_snowball_1:", ":blob_snowball_2:", ":blob_speedy_roll:", ":blob_speedy_roll_inverse:", ":blob_thinking:", ":blob_thinking_fast:", ":blob_thinking_portal:", ":blob_thinking_upsidedown:", ":blob_thonkang:", ":blob_thumbs_up:", ":blobblewobble:", ":blobenjoy:", ":blobglitch:", ":blobbass:", ":blobjam:", ":blobkeyboard:", ":bloblamp:", ":blobmaracas:", ":blobmicrophone:", ":blobthinksmart:", ":blobwobwork:", ":conga_party_thinking_blob:", ":Hyperblob:", ":party_blob:", ":partyparrot_blob:", ":partyparrot_blob_cat:"}
+
+var Messages []Message = make([]Message, 0)
+var Responses []OpenaiResponse = make([]OpenaiResponse, 0)
 
 func ChatGPT(args ArgsV2) {
-	api.PostMessage(args.ChannelID, PostApiAndGetResponseText(args.MessageText))
+	msg := api.PostMessage(args.ChannelID, blobs[rand.Intn(len(blobs))]+":loading:")
+	api.EditMessage(msg.Id, PostApiAndGetResponseTextAndRetryWhenError(msg, args.MessageText))
 }
 
 func ChatGPTReset(args ArgsV2) {
-	InputMessages = make([]Message, 0)
-	api.PostMessage(args.ChannelID, PostApiAndGetResponseText("今までの会話履歴を削除し、リセットしました"))
+	msg := api.PostMessage(args.ChannelID, ":blobnom::loading:")
+	Messages = make([]Message, 0)
+	api.EditMessage(msg.Id, PostApiAndGetResponseTextAndRetryWhenError(msg, "ユーザーに向けて、<今までの会話履歴を削除し、リセットしました>という旨の文を返してください 謝る必要はありません ダブルクォーテーションも必要ありません"))
+	Messages = make([]Message, 0)
+	Responses = make([]OpenaiResponse, 0)
 	return
 }
 
-func PostApiAndGetResponseText(input string) string {
+func ChatGPTDebug(args ArgsV2) {
+	returnString := "```\n"
+	for _, m := range Messages {
+		chatText := regexp.MustCompile("```").ReplaceAllString(m.Content, "")
+		if len(chatText) >= 30 {
+			returnString += m.Role + ": " + chatText[:30] + "...\n"
+		} else {
+			returnString += m.Role + ": " + chatText + "\n"
+		}
+	}
+	returnString += "```\n```\n"
+	prices := float32(0)
+	for _, r := range Responses {
+		prices += float32(r.Usage.TotalTokens) * (131.34 / 1000) * 0.002
+	}
+	r := Responses[len(Responses)-1]
+	price := float32(r.Usage.TotalTokens) * (131.34 / 1000) * 0.002
+	returnString += fmt.Sprintf("PromptTokens: %d\nCompletionTokens: %d\nTotalTokens: %d\n最後の一回で使った金額: %.2f円\n最後にリセットされてから使った合計金額:  %.2f円\n", r.Usage.PromptTokens, r.Usage.CompletionTokens, r.Usage.TotalTokens, price, prices)
+	returnString += "```"
+	api.PostMessage(args.ChannelID, returnString)
+}
+
+func PostApiAndGetResponseTextAndRetryWhenError(msg *traq.Message, input string) string {
+	responseText, err := PostApiAndGetResponseText(input)
+	if err != nil {
+		if err == JsonError {
+			api.EditMessage(msg.Id, "Error:"+fmt.Sprint(err)+"\nRETRYING :thonk_sweat: :loading::loading::loading:")
+			responseText2, err2 := PostApiAndGetResponseText(input)
+			if err2 != nil {
+				return "Error:" + fmt.Sprint(err) + "\nError:" + fmt.Sprint(err2)
+			}
+			return responseText2
+		} else {
+			return "Error:" + fmt.Sprint(err)
+		}
+	}
+	return responseText
+}
+
+func PostApiAndGetResponseText(input string) (string, error) {
 	response, err := getOpenaiResponse(input)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return "Error:" + fmt.Sprint(err)
+		return response.Result(), err
 	}
-	return response.Result()
+	Responses = append(Responses, response)
+	return response.Result(), nil
 }
 
 func (response OpenaiResponse) Result() string {
@@ -80,21 +136,21 @@ func (response OpenaiResponse) Text() string {
 }
 
 func (response OpenaiResponse) AddText() {
-	InputMessages = append(InputMessages, Message{
+	Messages = append(Messages, Message{
 		Role:    "assistant",
 		Content: response.Text(),
 	})
 }
 
 func getOpenaiResponse(inputMessage string) (OpenaiResponse, error) {
-	InputMessages = append(InputMessages, Message{
+	Messages = append(Messages, Message{
 		Role:    "user",
 		Content: inputMessage,
 	})
 
 	requestBody := OpenaiRequest{
 		Model:    model,
-		Messages: InputMessages,
+		Messages: Messages,
 	}
 
 	return openaiRequest(requestBody)
@@ -134,7 +190,8 @@ func openaiRequest(requestBody OpenaiRequest) (OpenaiResponse, error) {
 	var response OpenaiResponse
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return OpenaiResponse{}, err
+		fmt.Printf("%#v", body)
+		return OpenaiResponse{}, JsonError
 	}
 
 	return response, nil

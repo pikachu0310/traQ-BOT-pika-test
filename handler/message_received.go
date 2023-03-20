@@ -182,10 +182,14 @@ func commandsV2(args commands.ArgsV2) {
 	}
 
 	chatgptResetStampMatch := regexp.MustCompile(`(new(chat|gpt|chatgpt))|((chat|gpt|chatgpt)new)|(new (chat|gpt|chatgpt))|((chat|gpt|chatgpt) new)`)
+	chatgptDebugStampMatch := regexp.MustCompile(`gptdebug`)
 	chatgptStampMatch := regexp.MustCompile(`(\/chat)|(\/chatgpt)|(\/gpt)|(:chatgpt(\.[a-zA-Z_-]+)*:)`)
 	if chatgptStampMatch.MatchString(args.MessageText) {
 		if chatgptResetStampMatch.MatchString(args.MessageText) {
 			commands.ChatGPTReset(args)
+			return
+		} else if chatgptDebugStampMatch.MatchString(args.MessageText) {
+			commands.ChatGPTDebug(args)
 			return
 		}
 		textForSearch := chatgptStampMatch.ReplaceAllString(args.MessageText, "")
