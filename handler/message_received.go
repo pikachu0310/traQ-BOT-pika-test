@@ -182,7 +182,9 @@ func commandsV2(args commands.ArgsV2) {
 	}
 
 	chatgptResetStampMatch := regexp.MustCompile(`(new(chat|gpt|chatgpt))|((chat|gpt|chatgpt)new)|(new (chat|gpt|chatgpt))|((chat|gpt|chatgpt) new)`)
-	chatgptDebugStampMatch := regexp.MustCompile(`gptdebug`)
+	chatgptDebugStampMatch := regexp.MustCompile(`\/gptdebug|\/gpt debug`)
+	chatgptChangeFirstSystemMessageStampMatch := regexp.MustCompile(`\/gptsystem|\/gptsys|\/gpt system|\/gpt sys`)
+	chatgptShowFirstSystemMessageStampMatch := regexp.MustCompile(`show`)
 	chatgptStampMatch := regexp.MustCompile(`(\/chat)|(\/chatgpt)|(\/gpt)|(:chatgpt(\.[a-zA-Z_-]+)*:)`)
 	if chatgptStampMatch.MatchString(args.MessageText) {
 		if chatgptResetStampMatch.MatchString(args.MessageText) {
@@ -190,6 +192,14 @@ func commandsV2(args commands.ArgsV2) {
 			return
 		} else if chatgptDebugStampMatch.MatchString(args.MessageText) {
 			commands.ChatGPTDebug(args)
+			return
+		} else if chatgptChangeFirstSystemMessageStampMatch.MatchString(args.MessageText) {
+			if chatgptShowFirstSystemMessageStampMatch.MatchString(args.MessageText) {
+				commands.ChatGPTShowFirstSystemMessage(args)
+				return
+			}
+			args.MessageText = chatgptChangeFirstSystemMessageStampMatch.ReplaceAllString(args.MessageText, "")
+			commands.ChatGPTChangeFirstSystemMessage(args)
 			return
 		}
 		textForSearch := chatgptStampMatch.ReplaceAllString(args.MessageText, "")

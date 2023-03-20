@@ -59,6 +59,7 @@ var blobs = [...]string{":blob_bongo:", ":blob_crazy_happy:", ":blob_grin:", ":b
 
 var Messages []Message = make([]Message, 0)
 var Responses []OpenaiResponse = make([]OpenaiResponse, 0)
+var SystemRoleMessage string = "あなたはサークルである東京工業大学デジタル創作同好会traPの部内SNS、traQのユーザーを楽しませる娯楽用途のBOTの中に作られた、openaiのモデルgpt-3.5-turboを用いた対話型AIです。身内しかいないSNSで、ユーザーに緩く接してください。そして、ユーザーの言う事に出来る限り従うようにしてください。"
 
 func ChatGPT(args ArgsV2) {
 	msg := api.PostMessage(args.ChannelID, blobs[rand.Intn(len(blobs))]+":loading:")
@@ -97,11 +98,24 @@ func ChatGPTDebug(args ArgsV2) {
 	for _, r := range Responses {
 		prices += float32(r.Usage.TotalTokens) * (131.34 / 1000) * 0.002
 	}
+	if len(Responses) == 0 {
+		api.PostMessage(args.ChannelID, returnString)
+		return
+	}
 	r := Responses[len(Responses)-1]
 	price := float32(r.Usage.TotalTokens) * (131.34 / 1000) * 0.002
 	returnString += fmt.Sprintf("PromptTokens: %d\nCompletionTokens: %d\nTotalTokens: %d\n最後の一回で使った金額: %.2f円\n最後にリセットされてから使った合計金額:  %.2f円\n", r.Usage.PromptTokens, r.Usage.CompletionTokens, r.Usage.TotalTokens, price, prices)
 	returnString += "```"
 	api.PostMessage(args.ChannelID, returnString)
+}
+
+func ChatGPTChangeFirstSystemMessage(args ArgsV2) {
+	SystemRoleMessage = args.MessageText
+	api.PostMessage(args.ChannelID, "FirstSystemMessageを変更しました。/gptsys showで確認できます。\nFirstSystemMessageとは、常に履歴の一番最初に入り、最初にgptに情報や状況を説明するのに使用する文字列です")
+}
+
+func ChatGPTShowFirstSystemMessage(args ArgsV2) {
+	api.PostMessage(args.ChannelID, SystemRoleMessage)
 }
 
 func PostApiAndGetResponseAndRetryWhenError(msg *traq.Message, input string) (OpenaiResponse, error) {
@@ -150,6 +164,7 @@ func overTokenCheck(response OpenaiResponse) bool {
 }
 
 func PostApiAndGetResponse(input string) (OpenaiResponse, error) {
+	updateFirstSystemRoleMessage(SystemRoleMessage)
 	response, err := getOpenaiResponse(input)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -186,6 +201,35 @@ func getOpenaiResponse(inputMessage string) (OpenaiResponse, error) {
 	}
 
 	return openaiRequest(requestBody)
+}
+
+func addSystemRoleMessage(systemMessage string) {
+	Messages = append(Messages, Message{
+		Role:    "system",
+		Content: systemMessage,
+	})
+}
+
+func addFirstSystemRoleMessageIfNotExist(systemMessage string) {
+	for _, m := range Messages {
+		if m.Role == "system" {
+			return
+		}
+	}
+	systemM := Message{
+		Role:    "system",
+		Content: systemMessage,
+	}
+	Messages = append([]Message{systemM}, Messages...)
+}
+
+func updateFirstSystemRoleMessage(systemMessage string) {
+	addFirstSystemRoleMessageIfNotExist(systemMessage)
+	systemM := Message{
+		Role:    "system",
+		Content: systemMessage,
+	}
+	Messages[0] = systemM
 }
 
 func openaiRequest(requestBody OpenaiRequest) (OpenaiResponse, error) {
