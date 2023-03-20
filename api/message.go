@@ -8,6 +8,18 @@ import (
 	"github.com/traPtitech/go-traq"
 )
 
+type TraqMessage traq.Message
+
+func (message *TraqMessage) Edit(content string) error {
+	bot := util.GetBot()
+
+	_, err := bot.API().
+		MessageApi.EditMessage(context.Background(), message.Id).PostMessageRequest(traq.PostMessageRequest{
+		Content: content,
+	}).Execute()
+	return err
+}
+
 func PostMessage(channelID string, content string) *traq.Message {
 
 	bot := util.GetBot()
