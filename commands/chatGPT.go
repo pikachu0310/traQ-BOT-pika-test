@@ -107,7 +107,7 @@ func ChatGPTDebug(args ArgsV2) {
 func PostApiAndGetResponseAndRetryWhenError(msg *traq.Message, input string) (OpenaiResponse, error) {
 	response, err := PostApiAndGetResponse(input)
 	for i := 0; overTokenCheck(response) && i <= 4; i++ {
-		api.EditMessage(msg.Id, "Clearing recent history and retrying.["+fmt.Sprintf("%d", i+1)+"] :loading:")
+		api.EditMessage(msg.Id, "Clearing old history and retrying.["+fmt.Sprintf("%d", i+1)+"] :loading:")
 		if len(Messages) >= 5 {
 			Messages = Messages[4:]
 			Messages = Messages[:len(Messages)-1]
