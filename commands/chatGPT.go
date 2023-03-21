@@ -176,9 +176,9 @@ func PostApiAndGetResponse(input string) (OpenaiResponse, error) {
 
 func (response OpenaiResponse) Text() string {
 	if len(response.Choices) >= 1 {
+		response.AddText()
 		return response.Choices[0].Message.Content
 	}
-	response.AddText()
 	return "Error: ResponseText nil"
 }
 
