@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 type OpenaiRequest struct {
@@ -31,6 +32,7 @@ type OpenaiResponse struct {
 	Created int      `json:"created"`
 	Choices []Choice `json:"choices"`
 	Usage   Usage    `json:"usage"`
+	Model   string   `json:"model"`
 }
 
 type Choice struct {
@@ -53,6 +55,11 @@ var (
 )
 
 const model = "gpt-3.5-turbo"
+const model2 = "gpt-4"
+
+var gpt4 = false
+var lastGpt4 = false
+
 const openaiURL = "https://api.openai.com/v1/chat/completions"
 
 var blobs = [...]string{":blob_bongo:", ":blob_crazy_happy:", ":blob_grin:", ":blob_hype:", ":blob_love:", ":blob_lurk:", ":blob_pyon:", ":blob_pyon_inverse:", ":blob_slide:", ":blob_snowball_1:", ":blob_snowball_2:", ":blob_speedy_roll:", ":blob_speedy_roll_inverse:", ":blob_thinking:", ":blob_thinking_fast:", ":blob_thinking_portal:", ":blob_thinking_upsidedown:", ":blob_thonkang:", ":blob_thumbs_up:", ":blobblewobble:", ":blobenjoy:", ":blobglitch:", ":blobbass:", ":blobjam:", ":blobkeyboard:", ":bloblamp:", ":blobmaracas:", ":blobmicrophone:", ":blobthinksmart:", ":blobwobwork:", ":conga_party_thinking_blob:", ":Hyperblob:", ":party_blob:", ":partyparrot_blob:", ":partyparrot_blob_cat:"}
@@ -68,6 +75,18 @@ func ChatGPT(args ArgsV2) {
 		api.EditMessage(msg.Id, "Error: "+fmt.Sprint(err))
 	}
 	api.EditMessage(msg.Id, response.Text())
+	lastGpt4 = false
+}
+
+func ChatGPT4(args ArgsV2) {
+	msg := api.PostMessage(args.ChannelID, blobs[rand.Intn(len(blobs))]+":loading:(gpt-4)")
+	gpt4 = true
+	response, err := PostApiAndGetResponseAndRetryWhenError(msg, args.MessageText)
+	if err != nil {
+		api.EditMessage(msg.Id, "Error: "+fmt.Sprint(err))
+	}
+	api.EditMessage(msg.Id, response.Text())
+	lastGpt4 = true
 }
 
 func ChatGPTReset(args ArgsV2) {
@@ -83,6 +102,14 @@ func ChatGPTReset(args ArgsV2) {
 	return
 }
 
+func Sum(arr []float32) float32 {
+	var res float32 = 0
+	for i := 0; i < len(arr); i++ {
+		res += arr[i]
+	}
+	return res
+}
+
 func ChatGPTDebug(args ArgsV2) {
 	returnString := "```\n"
 	for _, m := range Messages {
@@ -94,17 +121,28 @@ func ChatGPTDebug(args ArgsV2) {
 		}
 	}
 	returnString += "```\n```\n"
-	prices := float32(0)
+	var prices []float32
 	for _, r := range Responses {
-		prices += float32(r.Usage.TotalTokens) * (131.34 / 1000) * 0.002
+		if strings.Contains(r.Model, "gpt-4") {
+			prices = append(prices, float32(r.Usage.PromptTokens)*(132.29/1000)*0.03+float32(r.Usage.CompletionTokens)*(132.29/1000)*0.06)
+			continue
+		} else if strings.Contains(r.Model, "gpt-3.5") {
+			prices = append(prices, float32(r.Usage.TotalTokens)*(132.29/1000)*0.002)
+			continue
+		}
 	}
 	if len(Responses) == 0 {
 		api.PostMessage(args.ChannelID, returnString)
 		return
 	}
 	r := Responses[len(Responses)-1]
-	price := float32(r.Usage.TotalTokens) * (131.34 / 1000) * 0.002
-	returnString += fmt.Sprintf("PromptTokens: %d\nCompletionTokens: %d\nTotalTokens: %d\n最後の一回で使った金額: %.2f円\n最後にリセットされてから使った合計金額:  %.2f円\n", r.Usage.PromptTokens, r.Usage.CompletionTokens, r.Usage.TotalTokens, price, prices)
+	var price float32
+	if strings.Contains(r.Model, "gpt-4") {
+		price = float32(r.Usage.PromptTokens)*(132.29/1000)*0.03 + float32(r.Usage.CompletionTokens)*(132.29/1000)*0.06
+	} else if strings.Contains(r.Model, "gpt-3.5") {
+		price = float32(r.Usage.TotalTokens) * (132.29 / 1000) * 0.002
+	}
+	returnString += fmt.Sprintf("PromptTokens: %d\nCompletionTokens: %d\nTotalTokens: %d\n最後の一回で使った金額: %.2f円\n最後にリセットされてから使った合計金額:  %.2f円\n", r.Usage.PromptTokens, r.Usage.CompletionTokens, r.Usage.TotalTokens, price, Sum(prices))
 	returnString += "```"
 	api.PostMessage(args.ChannelID, returnString)
 }
@@ -195,9 +233,18 @@ func getOpenaiResponse(inputMessage string) (OpenaiResponse, error) {
 		Content: inputMessage,
 	})
 
-	requestBody := OpenaiRequest{
-		Model:    model,
-		Messages: Messages,
+	requestBody := OpenaiRequest{}
+	if gpt4 {
+		requestBody = OpenaiRequest{
+			Model:    model2,
+			Messages: Messages,
+		}
+		gpt4 = false
+	} else {
+		requestBody = OpenaiRequest{
+			Model:    model,
+			Messages: Messages,
+		}
 	}
 
 	return openaiRequest(requestBody)
