@@ -174,7 +174,7 @@ func commandsV2(args commands.ArgsV2) {
 	}
 	args.MessageText = mentionMatch.ReplaceAllString(args.MessageText, "")
 
-	magStampMatch := regexp.MustCompile(`:(mag(|_right)|Internet_Explorer/google_g/yahoo)(\.[a-zA-Z_-]+)*:`)
+	magStampMatch := regexp.MustCompile(`:(mag(|_right)|Internet_Explorer|google_g|yahoo)(\.[a-zA-Z_-]+)*:`)
 	if magStampMatch.MatchString(args.MessageText) {
 		textForSearch := magStampMatch.ReplaceAllString(args.MessageText, "")
 		args.MessageText = textForSearch
