@@ -1,12 +1,13 @@
 package handler
 
 import (
-	"example-bot/api"
-	"example-bot/commands"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"example-bot/api"
+	"example-bot/commands"
 
 	"github.com/traPtitech/traq-ws-bot/payload"
 )
@@ -66,7 +67,7 @@ func init() {
 			commands.OxGameStart(args.ChannelID, args.Slice)
 		},
 		"edit": func(args commands.Args) {
-			//api.EditMessage(p.Message.ID, slice[1])
+			// api.EditMessage(p.Message.ID, slice[1])
 			if len(args.Slice) == 3 {
 				api.EditMessage(args.Slice[1], args.Slice[2])
 			}
@@ -83,15 +84,15 @@ func init() {
 		"docker": func(args commands.Args) {
 			commands.Docker(args.ChannelID, args.Slice)
 		},
-		//"stamps": func(args commands.Args) {
+		// "stamps": func(args commands.Args) {
 		//	commands.Stamps(args)
-		//},
-		//"search": func(args commands.Args) {
+		// },
+		// "search": func(args commands.Args) {
 		//	commands.Search(args)
-		//},
-		//"s": func(args commands.Args) {
+		// },
+		// "s": func(args commands.Args) {
 		//	commands.Search(args)
-		//},
+		// },
 		"info": func(args commands.Args) {
 			commands.Info(args)
 		},
@@ -173,7 +174,7 @@ func commandsV2(args commands.ArgsV2) {
 	}
 	args.MessageText = mentionMatch.ReplaceAllString(args.MessageText, "")
 
-	magStampMatch := regexp.MustCompile(`:(mag(|_right)|Internet_Explorer)(\.[a-zA-Z_-]+)*:`)
+	magStampMatch := regexp.MustCompile(`:(mag(|_right)|Internet_Explorer/google_g/yahoo)(\.[a-zA-Z_-]+)*:`)
 	if magStampMatch.MatchString(args.MessageText) {
 		textForSearch := magStampMatch.ReplaceAllString(args.MessageText, "")
 		args.MessageText = textForSearch
