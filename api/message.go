@@ -115,3 +115,16 @@ func GetMessages(text string) *traq.MessageSearchResult {
 	}
 	return messages
 }
+
+func GetMessagesFromUserNameAndLimitAndOffset(userID string, limit int32, offset int32) (*traq.MessageSearchResult, error) {
+	bot := util.GetBot()
+
+	messages, _, err := bot.API().
+		MessageApi.
+		SearchMessages(context.Background()).From(userID).Limit(limit).Offset(offset).
+		Execute()
+	if err != nil {
+		return nil, err
+	}
+	return messages, err
+}

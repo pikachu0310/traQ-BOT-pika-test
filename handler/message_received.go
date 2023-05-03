@@ -214,6 +214,11 @@ func commandsV2(args commands.ArgsV2) {
 		commands.ChatGPT(args)
 		return
 	}
+
+	cmdKusaMatch := regexp.MustCompile(`\/kusa |\/stamps |\/kusa|\/stamps`)
+	if cmdKusaMatch.MatchString(args.MessageText) {
+		commands.Kusa(cmdKusaMatch.ReplaceAllString(args.MessageText, ""), args.ChannelID)
+	}
 }
 
 func respond(ChannelID, content string) {
