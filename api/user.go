@@ -20,7 +20,7 @@ func GetUser(userID string) *traq.UserDetail {
 
 func GetUsers() []traq.User {
 	bot := util.GetBot()
-	Users, _, err := bot.API().UserApi.GetUsers(context.Background()).Execute()
+	Users, _, err := bot.API().UserApi.GetUsers(context.Background()).IncludeSuspended(true).Execute()
 	if err != nil {
 		fmt.Println(err)
 	}
