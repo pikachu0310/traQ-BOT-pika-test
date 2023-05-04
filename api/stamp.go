@@ -100,5 +100,5 @@ func GetStampByStampName(stampName string) (*traq.Stamp, error) {
 			return &stamp, nil
 		}
 	}
-	return nil, fmt.Errorf("stamp not found")
+	return nil, fmt.Errorf("stamp %s not found", stampName)
 }

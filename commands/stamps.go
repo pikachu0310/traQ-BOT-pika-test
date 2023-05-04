@@ -85,6 +85,9 @@ func parseArgs(cmdText string) (userName string, stampName string, minStampNum i
 		return
 	}
 	stampName = args[1]
+	if strings.HasPrefix(stampName, ":") && strings.HasSuffix(stampName, ":") && len(stampName) >= 2 {
+		stampName = stampName[1 : len(stampName)-1]
+	}
 	if len(args) == 2 {
 		return
 	}
@@ -108,7 +111,7 @@ func getUserMessages(userID string, progressMessageID string) ([]*traq.Message, 
 		for i := range res.Hits {
 			messages = append(messages, &res.Hits[i])
 		}
-		time.Sleep(time.Millisecond * 200)
+		time.Sleep(time.Millisecond * 100)
 		offset += 100
 		api.EditMessage(progressMessageID, fmt.Sprintf("Searching...(%d):loading:", offset))
 	}
