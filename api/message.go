@@ -3,7 +3,10 @@ package api
 import (
 	"context"
 	"example-bot/util"
+	"fmt"
+	"io"
 	"log"
+	"time"
 
 	"github.com/traPtitech/go-traq"
 )
@@ -116,15 +119,19 @@ func GetMessages(text string) *traq.MessageSearchResult {
 	return messages
 }
 
-func GetMessagesFromUser(userID string, limit int, offset int) (*traq.MessageSearchResult, error) {
+func GetMessagesFromUser(userID string, limit int, offset int, before time.Time) (*traq.MessageSearchResult, error) {
 	bot := util.GetBot()
 
-	messages, _, err := bot.API().
+	messages, res, err := bot.API().
 		MessageApi.
-		SearchMessages(context.Background()).From(userID).Limit(int32(limit)).Offset(int32(offset)).
+		SearchMessages(context.Background()).From(userID).Limit(int32(limit)).Offset(int32(offset)).Before(before).
 		Execute()
 	if err != nil {
-		return nil, err
+		res2, err2 := io.ReadAll(res.Body)
+		if err2 != nil {
+			return nil, err2
+		}
+		return nil, fmt.Errorf("%w: %s", err, string(res2))
 	}
 	return messages, err
 }

@@ -55,11 +55,13 @@ func Stamps(cmdText string, channelID string) error {
 		return fmt.Sprintf("%d https://q.trap.jp/messages/%s %s", m.B, m.A.Id, m.A.CreatedAt.Format(time.DateTime))
 	})
 	// 上で集めた文字列に加えて、最後に上で集めたメッセージの人数の多さTOP5のURLを追加する。
-	topFiveMessages := messagesWithCount[:lo.Min([]int{5, len(messagesWithCount)})]
+	topFiveMessages := First(messagesWithCount, 5)
 	formattedTopFiveMessages := lo.Map(topFiveMessages, func(m messageWithCount, _ int) string {
 		return fmt.Sprintf("https://q.trap.jp/messages/%s", m.A.Id)
 	})
+
 	resultContent := formatPostContent(formattedMessages, formattedTopFiveMessages)
+
 	if err = api.EditMessageWithErr(resultMessage.Id, resultContent); err != nil {
 		return post(fmt.Sprintf("Message edit failed: %s", err.Error()))
 	}
@@ -97,10 +99,12 @@ func parseArgs(cmdText string) (userName string, stampName string, minStampNum i
 
 // getUserMessages UserNameがtraQ上で発言した全てのメッセージを返す
 func getUserMessages(userID string, progressMessageID string) ([]*traq.Message, error) {
-	var offset int
 	var messages []*traq.Message
+	var before = time.Now()
 	for {
-		res, err := api.GetMessagesFromUser(userID, 100, offset)
+		t1 := time.Now()
+		res, err := api.GetMessagesFromUser(userID, 100, 0, before)
+		fmt.Println(time.Since(t1))
 		if err != nil {
 			return nil, err
 		}
@@ -112,8 +116,8 @@ func getUserMessages(userID string, progressMessageID string) ([]*traq.Message, 
 			messages = append(messages, &res.Hits[i])
 		}
 		time.Sleep(time.Millisecond * 100)
-		offset += 100
-		api.EditMessage(progressMessageID, fmt.Sprintf("Searching...(%d):loading:", offset))
+		before = messages[len(messages)-1].CreatedAt
+		api.EditMessage(progressMessageID, fmt.Sprintf("Searching...(%d):loading:", len(messages)))
 	}
 
 	return messages, nil
@@ -132,8 +136,16 @@ func countStampNumbers(messages []*traq.Message, stampID string) []messageWithCo
 func formatPostContent(all []string, top []string) string {
 	var lines []string
 	lines = append(lines, "```")
-	lines = append(lines, all...)
+	lines = append(lines, First(all, 100)...)
 	lines = append(lines, "```")
 	lines = append(lines, top...)
 	return strings.Join(lines, "\n")
+}
+
+func First[T any](slice []T, num int) []T {
+	if num >= len(slice) {
+		return slice
+	} else {
+		return slice[:num]
+	}
 }
