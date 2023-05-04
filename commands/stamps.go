@@ -61,7 +61,6 @@ func Stamps(cmdText string, channelID string) error {
 	})
 
 	resultContent := formatPostContent(formattedMessages, formattedTopFiveMessages)
-
 	if err = api.EditMessageWithErr(resultMessage.Id, resultContent); err != nil {
 		return post(fmt.Sprintf("Message edit failed: %s", err.Error()))
 	}
