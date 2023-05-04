@@ -5,7 +5,7 @@ import (
 )
 
 func GetTitle(args ArgsV2) {
-	slice := StringToSlice(args.MessageText)
+	slice := CmdArgs(args.MessageText)
 	if len(slice) < 2 {
 		return
 	}

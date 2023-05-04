@@ -1,124 +1,136 @@
 package commands
 
 import (
+	"errors"
 	"example-bot/api"
 	"fmt"
+	"github.com/samber/lo"
 	"github.com/traPtitech/go-traq"
-	"sort"
+	"golang.org/x/exp/slices"
 	"strconv"
+	"strings"
 	"time"
 )
 
-func Kusa(cmdText string, channelID string) {
-	var counts map[int][]string
-	usageMessage := "UserNameが発言したメッセージの中で、:Stamp:を付けた**人数**がMinStampNumより多いものを全部返します。(個数ではなく人数！)\nusage: @BOT_pika_test /stamps :@UserName: :Stamp: (MinStampNum)"
-	texts := StringToSlice(cmdText)
-	user := &traq.User{}
-	if len(texts) == 0 {
-		api.PostMessage(channelID, usageMessage)
+const usageText = "UserNameが発言したメッセージの中で、:Stamp:を付けた**人数**がMinStampNumより多いものを全部返します。(個数ではなく人数！)\nusage: @BOT_pika_test /stamps :@UserName: :Stamp: (MinStampNum)"
+const defaultStampName = "w"
+const defaultMinStampNum = 1
+
+type messageWithCount = lo.Tuple2[*traq.Message, int]
+
+// Stamps UserNameが発言したメッセージの中で、 :Stamp:を付けた人数がMinStampNumより多いものを、
+// 多い順に全部コードブロックの中に返す。 top5を最後にリンクだけ出力する。
+func Stamps(cmdText string, channelID string) error {
+	post := func(content string) error {
+		_, err := api.PostMessageWithErr(channelID, content)
+		return err
+	}
+	userName, stampName, minStampNum, err := parseArgs(cmdText)
+	user, err := api.GetUserByUserName(userName)
+	if err != nil {
+		return post(fmt.Sprintf("%s\n%s", err.Error(), usageText))
+	}
+	stamp, err := api.GetStampByStampName(stampName)
+	if err != nil {
+		return post(fmt.Sprintf("%s\n%s", err.Error(), usageText))
+	}
+	resultMessage, err := api.PostMessageWithErr(channelID, fmt.Sprintf("Searching...(%d):loading:", 0))
+	if err != nil {
+		return post(fmt.Sprintf("Failed to post message: %s", err.Error()))
+	}
+
+	// UserNameが発言したメッセージを100件ずつ取得する。
+	messages, err := getUserMessages(user.Id, resultMessage.Id)
+	if err != nil {
+		return post(fmt.Sprintf("Message search failed: %s", err.Error()))
+	}
+	// 取得したそれぞれのメッセージに対して、:Stamp:を付けた人数を数える。
+	messagesWithCount := countStampNumbers(messages, stamp.Id)
+	// 上で数えた人数がMinStampNumより多いメッセージだけを集める。
+	messagesWithCount = lo.Filter(messagesWithCount, func(m messageWithCount, _ int) bool { return m.B >= minStampNum })
+	// 上で集めたメッセージを、人数の多い順に、Sortする。
+	slices.SortFunc(messagesWithCount, func(a, b messageWithCount) bool { return a.B > b.B })
+	// 上で集めたメッセージの数とURLと時間を、フォーマットして文字列として集める。
+	formattedMessages := lo.Map(messagesWithCount, func(m messageWithCount, _ int) string {
+		return fmt.Sprintf("%d https://q.trap.jp/messages/%s %s", m.B, m.A.Id, m.A.CreatedAt.Format(time.DateTime))
+	})
+	// 上で集めた文字列に加えて、最後に上で集めたメッセージの人数の多さTOP5のURLを追加する。
+	topFiveMessages := messagesWithCount[:lo.Min([]int{5, len(messagesWithCount)})]
+	formattedTopFiveMessages := lo.Map(topFiveMessages, func(m messageWithCount, _ int) string {
+		return fmt.Sprintf("https://q.trap.jp/messages/%s", m.A.Id)
+	})
+	resultContent := formatPostContent(formattedMessages, formattedTopFiveMessages)
+	if err = api.EditMessageWithErr(resultMessage.Id, resultContent); err != nil {
+		return post(fmt.Sprintf("Message edit failed: %s", err.Error()))
+	}
+	return nil
+}
+
+func parseArgs(cmdText string) (userName string, stampName string, minStampNum int, err error) {
+	stampName = defaultStampName
+	minStampNum = defaultMinStampNum
+
+	args := CmdArgs(cmdText)
+	if len(args) == 0 {
+		return "", "", 0, errors.New("args is nil")
+	}
+	userName = args[0]
+	if strings.HasPrefix(userName, ":@") && strings.HasSuffix(userName, ":") && len(userName) >= 3 {
+		userName = userName[2 : len(userName)-1]
+	} else if strings.HasPrefix(userName, ":") && strings.HasSuffix(userName, ":") && len(userName) >= 2 {
+		userName = userName[1 : len(userName)-1]
+	}
+
+	if len(args) == 1 {
 		return
 	}
-	user, err := api.GetUserByUserName(texts[0])
-	if err != nil {
-		if len(texts[0]) <= 1 {
-			api.PostMessage(channelID, usageMessage)
-			return
-		}
-		user, err = api.GetUserByUserName(texts[0][1:])
-		if err != nil {
-			if len(texts[0]) <= 3 {
-				api.PostMessage(channelID, usageMessage)
-				return
-			}
-			user, err = api.GetUserByUserName(texts[0][2 : len(texts[0])-1])
-			if err != nil {
-				api.PostMessage(channelID, err.Error()+"\n"+usageMessage)
-				return
-			}
-		}
+	stampName = args[1]
+	if len(args) == 2 {
+		return
 	}
-	stampID := "6308a443-69f0-45e5-866f-56cc2c93578f"
-	if len(texts) >= 2 {
-		if len(texts[1]) <= 2 {
-			api.PostMessage(channelID, usageMessage)
-			return
-		}
-		stamp, err := api.GetStampByStampName(texts[1][1 : len(texts[1])-1])
-		if err != nil {
-			api.PostMessage(channelID, err.Error()+"\n"+usageMessage)
-			return
-		}
-		stampID = stamp.Id
-	}
-	minStampNum := 1
-	if len(texts) >= 3 {
-		minStampNum, err = strconv.Atoi(texts[2])
-		if err != nil {
-			api.PostMessage(channelID, usageMessage)
-			return
-		}
-	}
-	stamp := api.GetStamp(stampID)
+	minStampNum, err = strconv.Atoi(args[2])
+	return
+}
 
-	postedMessage := api.PostMessage(channelID, fmt.Sprintf("Searching...(0):loading: :@%s: :%s: %d", user.Name, stamp.Name, minStampNum))
-	returnMessage := ""
-	var offset int32 = 0
+// getUserMessages UserNameがtraQ上で発言した全てのメッセージを返す
+func getUserMessages(userID string, progressMessageID string) ([]*traq.Message, error) {
+	var offset int
+	var messages []*traq.Message
 	for {
-		fmt.Println(offset)
-		messages, err := api.GetMessagesFromUserNameAndLimitAndOffset(user.Id, 100, offset)
+		res, err := api.GetMessagesFromUser(userID, 100, offset)
 		if err != nil {
-			api.EditMessage(postedMessage.Id, err.Error())
-			break
+			return nil, err
 		}
-		if len(messages.Hits) == 0 {
+		if len(res.Hits) == 0 {
 			break
 		}
 
-		for _, message := range messages.Hits {
-			count := 0
-			for _, stamp := range message.Stamps {
-				if stamp.StampId == stampID {
-					count++
-				}
-			}
-			if count >= minStampNum {
-				counts[count] = append(counts[count], fmt.Sprintf("https://q.trap.jp/messages/%s", message.Id))
-				returnMessage += fmt.Sprintf("%d https://q.trap.jp/messages/%s %s\n", count, message.Id, message.CreatedAt.Format("2006-01-02-15:04"))
-			}
+		for i := range res.Hits {
+			messages = append(messages, &res.Hits[i])
 		}
 		time.Sleep(time.Millisecond * 200)
 		offset += 100
-		if len(returnMessage) >= 9980 {
-			break
-		}
-		api.EditMessage(postedMessage.Id, fmt.Sprintf("Searching...(%d):loading: :@%s: :%s: %d\n```\n%s```", offset, user.Name, stamp.Name, minStampNum, returnMessage))
+		api.EditMessage(progressMessageID, fmt.Sprintf("Searching...(%d):loading:", offset))
 	}
-	time.Sleep(time.Millisecond * 1000)
-	err = api.EditMessageWithErr(postedMessage.Id, "```\n"+returnMessage+"```")
-	if err != nil {
-		api.EditMessage(postedMessage.Id, "```\n"+returnMessage[:9980]+"\n......\n```")
-		return
-	}
+
+	return messages, nil
 }
 
-func SortMap(m map[int][]string) []string {
-	keys := getKeys(m)
-	sort.Ints(keys)
-
-	s := []string{}
-	for key := range keys {
-		for _, value := range m[key] {
-			s = append(s, value)
-		}
-	}
-
-	return s
+// countStampNumbers 取得したそれぞれのメッセージに対して、:Stamp:を付けた人数を数える。
+func countStampNumbers(messages []*traq.Message, stampID string) []messageWithCount {
+	return lo.Map(messages, func(message *traq.Message, index int) messageWithCount {
+		matchedStamps := lo.Filter(message.Stamps, func(m traq.MessageStamp, index int) bool {
+			return m.StampId == stampID
+		})
+		return lo.T2(message, len(matchedStamps))
+	})
 }
 
-func getKeys(m map[int][]string) []int {
-	keys := []int{}
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
+func formatPostContent(all []string, top []string) string {
+	var lines []string
+	lines = append(lines, "```")
+	lines = append(lines, all...)
+	lines = append(lines, "```")
+	lines = append(lines, top...)
+	return strings.Join(lines, "\n")
 }

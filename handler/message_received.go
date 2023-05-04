@@ -215,9 +215,9 @@ func commandsV2(args commands.ArgsV2) {
 		return
 	}
 
-	cmdKusaMatch := regexp.MustCompile(`\/kusa |\/stamps |\/kusa|\/stamps`)
-	if cmdKusaMatch.MatchString(args.MessageText) {
-		commands.Kusa(cmdKusaMatch.ReplaceAllString(args.MessageText, ""), args.ChannelID)
+	cmdStampsMatch := regexp.MustCompile(`\/kusa |\/stamps |\/kusa|\/stamps`)
+	if cmdStampsMatch.MatchString(args.MessageText) {
+		commands.Stamps(cmdStampsMatch.ReplaceAllString(args.MessageText, ""), args.ChannelID)
 	}
 }
 

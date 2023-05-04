@@ -16,7 +16,7 @@ type ArgsV2 struct {
 	UserID      string
 }
 
-func StringToSlice(text string) []string {
+func CmdArgs(text string) []string {
 	slice := strings.Split(text, " ")
 	if slice[0] == "@BOT_pika_test" {
 		slice = slice[1:]
