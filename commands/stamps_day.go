@@ -73,7 +73,7 @@ func getMessagesByPeriod(after time.Time, before time.Time, progressMessageID st
 			messages = append(messages, &res.Hits[i])
 		}
 		time.Sleep(time.Millisecond * 100)
-		before = messages[len(messages)-1].CreatedAt
+		searchBefore = messages[len(messages)-1].CreatedAt
 		api.EditMessage(progressMessageID, fmt.Sprintf("Searching...(%d):loading:", len(messages)))
 	}
 
