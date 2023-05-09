@@ -105,7 +105,7 @@ func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, befo
 	if len(args) == 2 {
 		return
 	}
-	after, err = time.Parse("2006-01-02", args[2])
+	after, err = time.Parse("2006-01-02", strings.ReplaceAll(args[2], "/", "-"))
 	if err != nil {
 		before = after.AddDate(0, 0, 1)
 		return
@@ -113,14 +113,13 @@ func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, befo
 	if len(args) == 3 {
 		return
 	}
-	before, err = time.Parse("2006-01-02", args[3])
+	before, err = time.Parse("2006-01-02", strings.ReplaceAll(args[3], "/", "-"))
 	if err != nil {
 		return
 	}
 	if len(args) == 4 {
 		return
 	}
-	fmt.Println(args[4])
 	top, err = strconv.Atoi(args[4])
 	if err != nil {
 		top = 5

@@ -79,11 +79,14 @@ func EditMessageWithErr(messageID string, content string) error {
 		MessageApi.EditMessage(context.Background(), messageID).PostMessageRequest(traq.PostMessageRequest{
 		Content: content,
 	}).Execute()
-	res2, err2 := io.ReadAll(res.Body)
-	if err2 != nil {
-		return err2
+	if err != nil {
+		res2, err2 := io.ReadAll(res.Body)
+		if err2 != nil {
+			return err2
+		}
+		return fmt.Errorf("%w: %s", err, string(res2))
 	}
-	return fmt.Errorf("%w: %s", err, string(res2))
+	return nil
 }
 
 func GetMessage(messageID string) *traq.Message {
