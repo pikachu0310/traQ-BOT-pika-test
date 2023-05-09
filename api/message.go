@@ -160,3 +160,19 @@ func GetMessagesFromPeriod(after time.Time, before time.Time, limit int, offset 
 	}
 	return messages, err
 }
+
+func DeleteMessage(messageID string) error {
+	bot := util.GetBot()
+
+	res, err := bot.API().
+		MessageApi.DeleteMessage(context.Background(), messageID).
+		Execute()
+	if err != nil {
+		res2, err2 := io.ReadAll(res.Body)
+		if err2 != nil {
+			return err2
+		}
+		return fmt.Errorf("%w: %s", err, string(res2))
+	}
+	return err
+}

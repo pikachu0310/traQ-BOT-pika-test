@@ -164,7 +164,7 @@ func commandsV2(args commands.ArgsV2) {
 
 	joinStampMatch := regexp.MustCompile(`join|いらっしゃい|oisu-|:oisu-1::oisu-2::oisu-3::oisu-4yoko:|おいすー`)
 	leaveStampMatch := regexp.MustCompile(`leave|さようなら|:wave:|ばいばい`)
-	mentionMatch := regexp.MustCompile(`@BOT_pika_test`)
+	mentionMatch := regexp.MustCompile(`@BOT_pika_test |@BOT_pika_test`)
 	if mentionMatch.MatchString(args.MessageText) {
 		if joinStampMatch.MatchString(args.MessageText) {
 			commands.BotJoin(args)
@@ -227,6 +227,11 @@ func commandsV2(args commands.ArgsV2) {
 		return
 	}
 
+	cmdDeleteMatch := regexp.MustCompile(`\/delete `)
+	if cmdDeleteMatch.MatchString(args.MessageText) {
+		commands.Delete(cmdDeleteMatch.ReplaceAllString(args.MessageText, ""))
+		return
+	}
 }
 
 func respond(ChannelID, content string) {
