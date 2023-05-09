@@ -85,7 +85,7 @@ func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, befo
 	t := time.Now()
 	midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
 	after = midnight
-	before = midnight.AddDate(0, 0, 1)
+	before = after.AddDate(0, 0, 1)
 
 	args := CmdArgs(cmdText)
 	if len(args) == 0 {
@@ -104,6 +104,7 @@ func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, befo
 	}
 	after, err = time.Parse("2006-01-02", args[2])
 	if err != nil {
+		before = after.AddDate(0, 0, 1)
 		return
 	}
 	if len(args) == 3 {
