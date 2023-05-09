@@ -75,11 +75,15 @@ func EditMessageWithErr(messageID string, content string) error {
 
 	bot := util.GetBot()
 
-	_, err := bot.API().
+	res, err := bot.API().
 		MessageApi.EditMessage(context.Background(), messageID).PostMessageRequest(traq.PostMessageRequest{
 		Content: content,
 	}).Execute()
-	return err
+	res2, err2 := io.ReadAll(res.Body)
+	if err2 != nil {
+		return err2
+	}
+	return fmt.Errorf("%w: %s", err, string(res2))
 }
 
 func GetMessage(messageID string) *traq.Message {
