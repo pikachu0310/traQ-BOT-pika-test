@@ -13,7 +13,7 @@ import (
 	"example-bot/api"
 )
 
-const stampsDayUsageText = "UserNameが発言したメッセージの中で、:Stamp:を付けた**人数**がMinStampNumより多いものを全部返します。(個数ではなく人数！)\nusage: @BOT_pika_test /stamps :@UserName: :Stamp: (MinStampNum)"
+const stampsDayUsageText = "指定した期間内(または今日)の全メッセージの中で:Stamp:をつけた**人数**が多いメッセージのTOP5を出力します。\n(※期間を省略すると今日で検索します。Stampを省略すると:w:で検索します。)\nusage: @BOT_pika_test /stamps day :Stamp: 2023-05-01 2023-05-07"
 
 func StampsDay(cmdText string, channelID string) error {
 	post := func(content string) error {
