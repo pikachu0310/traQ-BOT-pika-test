@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,14 +14,14 @@ import (
 	"example-bot/api"
 )
 
-const stampsDayUsageText = "指定した期間内(または今日)の全メッセージの中で:Stamp:をつけた**人数**が多いメッセージのTOP5を出力します。\n(※期間を省略すると今日で検索します。Stampを省略すると:w:で検索します。)\nusage: @BOT_pika_test /stamps day :Stamp: 2023-05-01 2023-05-07"
+const stampsDayUsageText = "指定した期間内(または今日)の全メッセージの中で:Stamp:をつけた**人数**が多いメッセージのTOP5(数は指定可能)を出力します。\n(※期間を省略すると今日で検索します。Stampを省略すると:w:で検索します。)\nusage: @BOT_pika_test /stamps day :Stamp: 2023-05-01 2023-05-07 5"
 
 func StampsDay(cmdText string, channelID string) error {
 	post := func(content string) error {
 		_, err := api.PostMessageWithErr(channelID, content)
 		return err
 	}
-	stampName, after, before, err := stampsDayParseArgs(cmdText)
+	stampName, after, before, err, top := stampsDayParseArgs(cmdText)
 	stamp, err := api.GetStampByStampName(stampName)
 	if err != nil {
 		return post(fmt.Sprintf("%s\n%s", err.Error(), stampsDayUsageText))
@@ -37,7 +38,7 @@ func StampsDay(cmdText string, channelID string) error {
 	// 上で集めたメッセージを、人数の多い順に、Sortする。
 	slices.SortFunc(messagesWithCount, func(a, b messageWithCount) bool { return a.B > b.B })
 	// 上で集めた文字列に加えて、最後に上で集めたメッセージの人数の多さTOP5のURLを追加する。
-	topFiveMessages := First(messagesWithCount, 5)
+	topFiveMessages := First(messagesWithCount, top)
 	formattedTopFiveMessages := lo.Map(topFiveMessages, func(m messageWithCount, _ int) string {
 		return fmt.Sprintf("https://q.trap.jp/messages/%s", m.A.Id)
 	})
@@ -80,16 +81,18 @@ func getMessagesByPeriod(after time.Time, before time.Time, progressMessageID st
 	return messages, nil
 }
 
-func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, before time.Time, err error) {
+func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, before time.Time, err error, top int) {
 	stampName = defaultStampName
 	t := time.Now()
 	midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
 	after = midnight
 	before = after.AddDate(0, 0, 1)
+	top = 5
 
 	args := CmdArgs(cmdText)
 	if len(args) == 0 {
-		return "", time.Time{}, time.Time{}, errors.New("args is nil")
+		err = errors.New("args is nil")
+		return
 	}
 
 	if len(args) == 1 {
@@ -112,6 +115,14 @@ func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, befo
 	}
 	before, err = time.Parse("2006-01-02", args[3])
 	if err != nil {
+		return
+	}
+	if len(args) == 4 {
+		return
+	}
+	top, err = strconv.Atoi(args[4])
+	if err != nil {
+		top = 5
 		return
 	}
 	return
