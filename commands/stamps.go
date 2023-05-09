@@ -137,7 +137,7 @@ func countStampNumbers(messages []*traq.Message, stampID string) []messageWithCo
 func formatPostContent(all []string, top []string) string {
 	var lines []string
 	lines = append(lines, "```")
-	lines = aappend(lines, First(all, 100)...)
+	lines = append(lines, First(all, 100)...)
 	lines = append(lines, "```")
 	lines = append(lines, top...)
 	return strings.Join(lines, "\n")

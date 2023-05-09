@@ -3,7 +3,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -50,7 +49,8 @@ func StampsDay(cmdText string, channelID string) error {
 	return nil
 }
 
-func stampsDayFormatPostContent(messages []string) string{} {
+func stampsDayFormatPostContent(top []string) string {
+	var lines []string
 	lines = append(lines, top...)
 	return strings.Join(lines, "\n")
 }
