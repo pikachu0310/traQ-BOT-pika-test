@@ -120,6 +120,7 @@ func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, befo
 	if len(args) == 4 {
 		return
 	}
+	fmt.Println(args[4])
 	top, err = strconv.Atoi(args[4])
 	if err != nil {
 		top = 5
