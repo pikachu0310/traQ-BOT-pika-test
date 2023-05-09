@@ -2,17 +2,19 @@ package commands
 
 import (
 	"errors"
-	"example-bot/api"
 	"fmt"
-	"github.com/samber/lo"
-	"github.com/traPtitech/go-traq"
-	"golang.org/x/exp/slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/samber/lo"
+	"github.com/traPtitech/go-traq"
+	"golang.org/x/exp/slices"
+
+	"example-bot/api"
 )
 
-const usageText = "UserNameが発言したメッセージの中で、:Stamp:を付けた**人数**がMinStampNumより多いものを全部返します。(個数ではなく人数！)\nusage: @BOT_pika_test /stamps :@UserName: :Stamp: (MinStampNum)"
+const stampsUsageText = "UserNameが発言したメッセージの中で、:Stamp:を付けた**人数**がMinStampNumより多いものを全部返します。(個数ではなく人数！)\nusage: @BOT_pika_test /stamps :@UserName: :Stamp: (MinStampNum)"
 const defaultStampName = "w"
 const defaultMinStampNum = 1
 
@@ -25,14 +27,14 @@ func Stamps(cmdText string, channelID string) error {
 		_, err := api.PostMessageWithErr(channelID, content)
 		return err
 	}
-	userName, stampName, minStampNum, err := parseArgs(cmdText)
+	userName, stampName, minStampNum, err := stampsParseArgs(cmdText)
 	user, err := api.GetUserByUserName(userName)
 	if err != nil {
-		return post(fmt.Sprintf("%s\n%s", err.Error(), usageText))
+		return post(fmt.Sprintf("%s\n%s", err.Error(), stampsUsageText))
 	}
 	stamp, err := api.GetStampByStampName(stampName)
 	if err != nil {
-		return post(fmt.Sprintf("%s\n%s", err.Error(), usageText))
+		return post(fmt.Sprintf("%s\n%s", err.Error(), stampsUsageText))
 	}
 	resultMessage, err := api.PostMessageWithErr(channelID, fmt.Sprintf("Searching...(%d):loading:", 0))
 	if err != nil {
@@ -67,7 +69,7 @@ func Stamps(cmdText string, channelID string) error {
 	return nil
 }
 
-func parseArgs(cmdText string) (userName string, stampName string, minStampNum int, err error) {
+func stampsParseArgs(cmdText string) (userName string, stampName string, minStampNum int, err error) {
 	stampName = defaultStampName
 	minStampNum = defaultMinStampNum
 
@@ -135,7 +137,7 @@ func countStampNumbers(messages []*traq.Message, stampID string) []messageWithCo
 func formatPostContent(all []string, top []string) string {
 	var lines []string
 	lines = append(lines, "```")
-	lines = append(lines, First(all, 100)...)
+	lines = aappend(lines, First(all, 100)...)
 	lines = append(lines, "```")
 	lines = append(lines, top...)
 	return strings.Join(lines, "\n")
