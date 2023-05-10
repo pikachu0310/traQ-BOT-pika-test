@@ -28,6 +28,9 @@ func Stamps(cmdText string, channelID string) error {
 		return err
 	}
 	userName, stampName, minStampNum, err := stampsParseArgs(cmdText)
+	if err != nil {
+		return post(fmt.Sprintf("%s\n%s", err.Error(), stampsUsageText))
+	}
 	user, err := api.GetUserByUserName(userName)
 	if err != nil {
 		return post(fmt.Sprintf("%s\n%s", err.Error(), stampsUsageText))
