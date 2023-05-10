@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gocolly/colly v1.2.0
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/rocketlaunchr/google-search v1.1.5
 	github.com/samber/lo v1.38.1
 	github.com/traPtitech/go-traq v0.0.0-20220822084224-d405d26bce99

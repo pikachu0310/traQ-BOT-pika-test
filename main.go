@@ -7,6 +7,8 @@ import (
 
 func main() {
 
+	handler.Cron()
+
 	bot := util.GetBot()
 
 	bot.OnMessageCreated(handler.MessageReceived())
