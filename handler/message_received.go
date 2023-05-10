@@ -215,7 +215,7 @@ func commandsV2(args commands.ArgsV2) {
 		return
 	}
 
-	cmdStampsDayMatch := regexp.MustCompile(`((\/kusa|\/stamps)+(| )+(day|today|period|daily)+(| ))|((\/today|\/day|\/daily)+(| )+(|stamps|kusa)+(| ))`)
+	cmdStampsDayMatch := regexp.MustCompile(`((\/kusa|\/stamps)+( |)+(day|today|period|daily)+( |))|((\/today|\/day|\/daily)+( |)+(|stamps|kusa)+( |))`)
 	if cmdStampsDayMatch.MatchString(args.MessageText) {
 		commands.StampsDay(cmdStampsDayMatch.ReplaceAllString(args.MessageText, ""), args.ChannelID)
 		return
