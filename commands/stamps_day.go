@@ -21,7 +21,11 @@ func StampsDay(cmdText string, channelID string) error {
 		_, err := api.PostMessageWithErr(channelID, content)
 		return err
 	}
+	fmt.Println("StampsDay", cmdText)
 	stampName, after, before, err, top := stampsDayParseArgs(cmdText)
+	if err != nil {
+		return post(fmt.Sprintf("%s\n%s", err.Error(), stampsDayUsageText))
+	}
 	stamp, err := api.GetStampByStampName(stampName)
 	if err != nil {
 		return post(fmt.Sprintf("%s\n%s", err.Error(), stampsDayUsageText))
@@ -87,6 +91,8 @@ func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, befo
 	midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
 	after = midnight
 	before = after.AddDate(0, 0, 1)
+	fmt.Println(after)
+	fmt.Println(before)
 	top = 5
 
 	args := CmdArgs(cmdText)
@@ -95,32 +101,37 @@ func stampsDayParseArgs(cmdText string) (stampName string, after time.Time, befo
 		return
 	}
 
-	if len(args) == 1 {
-		return
-	}
-	stampName = args[1]
+	stampName = args[0]
 	if strings.HasPrefix(stampName, ":") && strings.HasSuffix(stampName, ":") && len(stampName) >= 2 {
 		stampName = stampName[1 : len(stampName)-1]
 	}
+	if len(args) == 1 {
+		return
+	}
+	after, err = time.ParseInLocation("2006-01-02", strings.ReplaceAll(args[1], "/", "-"), time.Local)
+	if err != nil {
+		after, err = time.ParseInLocation("2006-1-2", strings.ReplaceAll(args[1], "/", "-"), time.Local)
+		if err != nil {
+			before = after.AddDate(0, 0, 1)
+			return
+		}
+	}
+	fmt.Println(after)
 	if len(args) == 2 {
 		return
 	}
-	after, err = time.Parse("2006-01-02", strings.ReplaceAll(args[2], "/", "-"))
+	before, err = time.ParseInLocation("2006-01-02", strings.ReplaceAll(args[2], "/", "-"), time.Local)
 	if err != nil {
-		before = after.AddDate(0, 0, 1)
-		return
+		before, err = time.ParseInLocation("2006-1-2", strings.ReplaceAll(args[2], "/", "-"), time.Local)
+		if err != nil {
+			return
+		}
 	}
+	fmt.Println(before)
 	if len(args) == 3 {
 		return
 	}
-	before, err = time.Parse("2006-01-02", strings.ReplaceAll(args[3], "/", "-"))
-	if err != nil {
-		return
-	}
-	if len(args) == 4 {
-		return
-	}
-	top, err = strconv.Atoi(args[4])
+	top, err = strconv.Atoi(args[3])
 	if err != nil {
 		top = 5
 		return
