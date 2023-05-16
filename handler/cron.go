@@ -13,13 +13,12 @@ const trendWChannelID = "5b7b8143-7c0d-4ade-8658-3a8d8ce4dd83"
 
 func Cron() {
 	c := cron.New()
-
-	t := time.Now()
-	midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
-	after := midnight
-	before := after.AddDate(0, 0, 1)
-
+	
 	c.AddFunc("50 23 * * *", func() {
+		t := time.Now()
+		midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+		after := midnight
+		before := after.AddDate(0, 0, 1)
 		commands.StampsDay(fmt.Sprintf(":w: %d/%d/%d %d/%d/%d 10", after.Year(), after.Month(), after.Day(), before.Year(), before.Month(), before.Day()), trendWChannelID)
 	})
 
