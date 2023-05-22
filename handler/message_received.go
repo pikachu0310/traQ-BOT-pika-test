@@ -66,12 +66,12 @@ func init() {
 		"game": func(args commands.Args) {
 			commands.OxGameStart(args.ChannelID, args.Slice)
 		},
-		"edit": func(args commands.Args) {
-			// api.EditMessage(p.Message.ID, slice[1])
-			if len(args.Slice) == 3 {
-				api.EditMessage(args.Slice[1], args.Slice[2])
-			}
-		},
+		// "edit": func(args commands.Args) {
+		// 	// api.EditMessage(p.Message.ID, slice[1])
+		// 	if len(args.Slice) == 3 {
+		// 		api.EditMessage(args.Slice[1], args.Slice[2])
+		// 	}
+		// },
 		"help": func(args commands.Args) {
 			commands.Help(args.ChannelID, args.Slice)
 		},
@@ -120,13 +120,13 @@ func MessageReceived() func(p *payload.MessageCreated) {
 			return
 		}
 
-		CommandReceived(p.Message.PlainText, p.Message.ID, p.Message.ChannelID, p.Message.User.ID)
+		CommandReceived(p.Message.PlainText, p.Message.ID, p.Message.ChannelID, p.Message.User.ID, p.Message.Text)
 	}
 }
 
-func CommandReceived(text, MessageID string, ChannelID string, UserID string) {
+func CommandReceived(text, MessageID, ChannelID, UserID, originalText string) {
 
-	args := commands.ArgsV2{MessageText: text, MessageID: MessageID, ChannelID: ChannelID, UserID: UserID}
+	args := commands.ArgsV2{MessageText: text, MessageID: MessageID, ChannelID: ChannelID, UserID: UserID, OriginalText: originalText}
 	commandsV2(args)
 
 	slice := strings.Split(text, " ")
@@ -230,6 +230,13 @@ func commandsV2(args commands.ArgsV2) {
 	cmdDeleteMatch := regexp.MustCompile(`\/delete `)
 	if cmdDeleteMatch.MatchString(args.MessageText) {
 		commands.Delete(cmdDeleteMatch.ReplaceAllString(args.MessageText, ""))
+		return
+	}
+
+	cmdEditMatch := regexp.MustCompile(`\/edit `)
+	if cmdEditMatch.MatchString(args.MessageText) {
+		cmdText := cmdEditMatch.ReplaceAllString(args.OriginalText, "")
+		commands.Edit(cmdText)
 		return
 	}
 }
