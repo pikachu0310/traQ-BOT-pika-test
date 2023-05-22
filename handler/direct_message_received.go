@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"github.com/traPtitech/traq-ws-bot/payload"
 	"log"
+
+	"github.com/traPtitech/traq-ws-bot/payload"
 )
 
 func DirectMessageReceived() func(p *payload.DirectMessageCreated) {
@@ -17,6 +18,6 @@ func DirectMessageReceived() func(p *payload.DirectMessageCreated) {
 			return
 		}
 
-		CommandReceived(p.Message.PlainText, p.Message.ID, p.Message.ChannelID, p.Message.User.ID)
+		CommandReceived(p.Message.PlainText, p.Message.ID, p.Message.ChannelID, p.Message.User.ID, p.Message.Text)
 	}
 }

@@ -161,6 +161,23 @@ func GetMessagesFromPeriod(after time.Time, before time.Time, limit int, offset 
 	return messages, err
 }
 
+func GetMessagesFromChannelFrom(after time.Time, before time.Time, limit int, offset int, userID string, channelID string) (*traq.MessageSearchResult, error) {
+	bot := util.GetBot()
+
+	messages, res, err := bot.API().
+		MessageApi.
+		SearchMessages(context.Background()).Limit(int32(limit)).Offset(int32(offset)).Before(before).After(after).From(userID).In(channelID).
+		Execute()
+	if err != nil {
+		res2, err2 := io.ReadAll(res.Body)
+		if err2 != nil {
+			return nil, err2
+		}
+		return nil, fmt.Errorf("%w: %s", err, string(res2))
+	}
+	return messages, err
+}
+
 func DeleteMessage(messageID string) error {
 	bot := util.GetBot()
 

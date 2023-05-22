@@ -10,10 +10,11 @@ type Args struct {
 }
 
 type ArgsV2 struct {
-	MessageText string
-	MessageID   string
-	ChannelID   string
-	UserID      string
+	MessageText  string
+	MessageID    string
+	ChannelID    string
+	UserID       string
+	OriginalText string
 }
 
 func CmdArgs(text string) []string {
