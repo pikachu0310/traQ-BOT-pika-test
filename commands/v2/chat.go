@@ -68,10 +68,9 @@ func OpenAIStream(messages []Message, openaiModel Models, do func(string)) (fini
 	}
 
 	req := openai.ChatCompletionRequest{
-		Model:     model,
-		MaxTokens: 10,
-		Messages:  messages,
-		Stream:    true,
+		Model:    model,
+		Messages: messages,
+		Stream:   true,
 	}
 	stream, err := c.CreateChatCompletionStream(ctx, req)
 	if err != nil {
