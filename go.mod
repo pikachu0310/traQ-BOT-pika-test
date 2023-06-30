@@ -8,6 +8,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rocketlaunchr/google-search v1.1.5
 	github.com/samber/lo v1.38.1
+	github.com/sashabaranov/go-openai v1.12.0
 	github.com/traPtitech/go-traq v0.0.0-20220822084224-d405d26bce99
 	github.com/traPtitech/traq-ws-bot v1.1.2
 )

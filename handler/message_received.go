@@ -8,6 +8,7 @@ import (
 
 	"example-bot/api"
 	"example-bot/commands"
+	v2 "example-bot/commands/v2"
 
 	"github.com/traPtitech/traq-ws-bot/payload"
 )
@@ -190,28 +191,28 @@ func commandsV2(args commands.ArgsV2) {
 	chatgpt4Match := regexp.MustCompile(`\/gpt4`)
 	if chatgptMatch.MatchString(args.MessageText) {
 		if chatgptResetMatch.MatchString(args.MessageText) {
-			commands.ChatGPTReset(args)
+			v2.ChatReset(args.ChannelID)
 			return
 		} else if chatgptDebugMatch.MatchString(args.MessageText) {
 			commands.ChatGPTDebug(args)
 			return
 		} else if chatgptChangeFirstSystemMessageMatch.MatchString(args.MessageText) {
 			if chatgptShowFirstSystemMessageMatch.MatchString(args.MessageText) {
-				commands.ChatGPTShowFirstSystemMessage(args)
+				v2.ChatShowSystemMessage(args.ChannelID)
 				return
 			}
 			args.MessageText = chatgptChangeFirstSystemMessageMatch.ReplaceAllString(args.MessageText, "")
-			commands.ChatGPTChangeFirstSystemMessage(args)
+			v2.ChatChangeSystemMessage(args.ChannelID, args.MessageText)
 			return
 		} else if chatgpt4Match.MatchString(args.MessageText) {
 			textForSearch := chatgpt4Match.ReplaceAllString(args.MessageText, "")
 			args.MessageText = textForSearch
-			commands.ChatGPT4(args)
+			v2.Chat(args.ChannelID, args.MessageText, v2.GPT4)
 			return
 		}
 		textForSearch := chatgptMatch.ReplaceAllString(args.MessageText, "")
 		args.MessageText = textForSearch
-		commands.ChatGPT(args)
+		v2.Chat(args.ChannelID, args.MessageText, v2.GPT3dot5Turbo)
 		return
 	}
 

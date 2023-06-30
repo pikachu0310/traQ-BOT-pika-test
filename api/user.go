@@ -3,10 +3,14 @@ package api
 import (
 	"context"
 	"errors"
-	"example-bot/util"
 	"fmt"
+
 	"github.com/traPtitech/go-traq"
+
+	"example-bot/util"
 )
+
+var UserList []traq.User = GetUsers()
 
 func GetUser(userID string) *traq.UserDetail {
 	fmt.Println("GetUser", userID)
@@ -29,7 +33,6 @@ func GetUsers() []traq.User {
 
 // GetUserByUserNameWithMe 一致するユーザーが見つからなかったら、自分を返す
 func GetUserByUserNameWithMe(UserName string, UserID string) *traq.User {
-	UserList := GetUsers()
 	meNum := 0
 	for num, user := range UserList {
 		if user.Name == UserName {
@@ -43,7 +46,6 @@ func GetUserByUserNameWithMe(UserName string, UserID string) *traq.User {
 }
 
 func GetUserByUserName(UserName string) (*traq.User, error) {
-	UserList := GetUsers()
 	for _, user := range UserList {
 		if user.Name == UserName {
 			return &user, nil
