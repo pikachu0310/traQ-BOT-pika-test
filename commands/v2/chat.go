@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"regexp"
+	"time"
 
 	"github.com/sashabaranov/go-openai"
 
@@ -53,7 +55,7 @@ const GptSystemString = "FirstSystemMessageを変更しました。/gptsys show�
 // 	})
 // }
 
-func OpenAIStream(messages []Message, openaiModel Models, do func(string)) (finishReason FinishReason, err error) {
+func OpenAIStream(messages []Message, openaiModel Models, do func(string)) (responseMessage string, finishReason FinishReason, err error) {
 	c := openai.NewClient(apiKey)
 	ctx := context.Background()
 
@@ -80,7 +82,6 @@ func OpenAIStream(messages []Message, openaiModel Models, do func(string)) (fini
 	defer stream.Close()
 
 	fmt.Printf("Stream response: ")
-	var responseMessage string
 	for {
 		response, err := stream.Recv()
 
@@ -96,6 +97,7 @@ func OpenAIStream(messages []Message, openaiModel Models, do func(string)) (fini
 		}
 
 		if response.Choices[0].FinishReason == "stop" {
+			time.Sleep(200 * time.Millisecond)
 			do(responseMessage)
 			finishReason = stop
 			break
@@ -119,7 +121,7 @@ func Chat(channelID, newMessage string, openaiModel Models) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	finishReason, err := OpenAIStream(Messages, openaiModel, func(responseMessage string) {
+	responsedMessage, finishReason, err := OpenAIStream(Messages, openaiModel, func(responseMessage string) {
 		api.EditMessage(postMessage.Id, responseMessage)
 	})
 	if err != nil {
@@ -128,10 +130,17 @@ func Chat(channelID, newMessage string, openaiModel Models) {
 
 	// finishReasonがlength以外になるまで、最大5回まで繰り返す
 	for i := 0; i < 5 && finishReason == length; i++ {
-		nowPostMessage := postMessage.Content
-		Messages = Messages[1:]
+		time.Sleep(500 * time.Millisecond)
+		nowPostMessage := responsedMessage
+		if len(Messages) >= 5 {
+			Messages = Messages[3:]
+		} else if len(Messages) >= 3 {
+			Messages = Messages[2:]
+		} else if len(Messages) >= 1 {
+			Messages = Messages[1:]
+		}
 		addMessageAsUser("先ほどのあなたのメッセージが途中で途切れてしまっているので、続きだけを出力してください。")
-		finishReason, err = OpenAIStream(Messages, openaiModel, func(responseMessage string) {
+		responsedMessage, finishReason, err = OpenAIStream(Messages, openaiModel, func(responseMessage string) {
 			api.EditMessage(postMessage.Id, nowPostMessage+"\n"+responseMessage)
 		})
 		if err != nil {
@@ -198,5 +207,22 @@ func updateSystemRoleMessage(message string) {
 	Messages[0] = Message{
 		Role:    "system",
 		Content: message,
+	}
+}
+
+func ChatDebug(channelID string) {
+	returnString := "```\n"
+	for _, m := range Messages {
+		chatText := regexp.MustCompile("```").ReplaceAllString(m.Content, "")
+		if len(chatText) >= 40 {
+			returnString += m.Role + ": " + chatText[:40] + "...\n"
+		} else {
+			returnString += m.Role + ": " + chatText + "\n"
+		}
+	}
+	returnString += "```"
+	_, err := api.PostMessageWithErr(channelID, returnString)
+	if err != nil {
+		fmt.Println(err)
 	}
 }

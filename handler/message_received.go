@@ -194,7 +194,7 @@ func commandsV2(args commands.ArgsV2) {
 			v2.ChatReset(args.ChannelID)
 			return
 		} else if chatgptDebugMatch.MatchString(args.MessageText) {
-			commands.ChatGPTDebug(args)
+			v2.ChatDebug(args.ChannelID)
 			return
 		} else if chatgptChangeFirstSystemMessageMatch.MatchString(args.MessageText) {
 			if chatgptShowFirstSystemMessageMatch.MatchString(args.MessageText) {
