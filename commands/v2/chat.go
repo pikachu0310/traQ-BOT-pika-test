@@ -82,6 +82,8 @@ func OpenAIStream(messages []Message, openaiModel Models, do func(string)) (resp
 	defer stream.Close()
 
 	fmt.Printf("Stream response: ")
+	deltaTime := 500 * time.Millisecond
+	lastDoTime := time.Now()
 	for {
 		response, err := stream.Recv()
 
@@ -108,8 +110,11 @@ func OpenAIStream(messages []Message, openaiModel Models, do func(string)) (resp
 		}
 
 		responseMessage += response.Choices[0].Delta.Content
-		do(blobsAndAmazed[rand.Intn(len(blobs))] + responseMessage + ":loading:")
-		time.Sleep(500 * time.Millisecond)
+
+		if time.Now().Sub(lastDoTime) >= deltaTime {
+			lastDoTime = time.Now()
+			do(blobsAndAmazed[rand.Intn(len(blobs))] + responseMessage + ":loading:")
+		}
 	}
 	addMessageAsAssistant(responseMessage)
 	return
