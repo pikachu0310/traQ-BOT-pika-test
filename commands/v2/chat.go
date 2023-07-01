@@ -109,6 +109,7 @@ func OpenAIStream(messages []Message, openaiModel Models, do func(string)) (resp
 
 		responseMessage += response.Choices[0].Delta.Content
 		do(blobsAndAmazed[rand.Intn(len(blobs))] + responseMessage + ":loading:")
+		time.Sleep(500 * time.Millisecond)
 	}
 	addMessageAsAssistant(responseMessage)
 	return
