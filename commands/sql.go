@@ -15,7 +15,7 @@ func Sql(ChannelID string, slice []string) {
 	for i := 1; i < len(slice); i++ {
 		sqlSentence += slice[i] + " "
 	}
-	out, err := exec.Command("docker", "compose", "exec", "mysql_test", "mysql", "-t", "-N", "-u", "root", "-ppassword", "mydb", "-e", sqlSentence).CombinedOutput()
+	out, err := exec.Command("mysql", "-t", "-N", "-u", "$NS_MARIADB_USER", "-p$NS_MARIADB_PASSWORD", "-h", "$NS_MARIADB_HOSTNAME", "$NS_MARIADB_DATABASE", "-e", sqlSentence).CombinedOutput()
 	returnSentence := ""
 	returnSentenceAdd := ""
 	if err != nil {
