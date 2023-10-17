@@ -3,6 +3,7 @@ package commands
 import (
 	"example-bot/api"
 	"fmt"
+	"os"
 	_ "github.com/go-sql-driver/mysql"
 	"os/exec"
 )
@@ -15,7 +16,15 @@ func Sql(ChannelID string, slice []string) {
 	for i := 1; i < len(slice); i++ {
 		sqlSentence += slice[i] + " "
 	}
-	out, err := exec.Command("mysql", "-t", "-N", "-u", "$NS_MARIADB_USER", "-p$NS_MARIADB_PASSWORD", "-h", "$NS_MARIADB_HOSTNAME", "$NS_MARIADB_DATABASE", "-e", sqlSentence).CombinedOutput()
+
+	// 環境変数を読み込む
+	user := os.Getenv("NS_MARIADB_USER")
+	password := os.Getenv("NS_MARIADB_PASSWORD")
+	hostname := os.Getenv("NS_MARIADB_HOSTNAME")
+	database := os.Getenv("NS_MARIADB_DATABASE")
+
+	// ここで読み込んだ環境変数をCommandに渡す
+	out, err := exec.Command("mysql", "-t", "-N", "-u", user, "-p"+password, "-h", hostname, database, "-e", sqlSentence).CombinedOutput()
 	returnSentence := ""
 	returnSentenceAdd := ""
 	if err != nil {
