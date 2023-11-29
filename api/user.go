@@ -11,6 +11,7 @@ import (
 )
 
 var UserList []traq.User = GetUsers()
+var UserAndBotList []traq.User = append(UserList, BotsToUsers(GetBots())...)
 
 func GetUser(userID string) *traq.UserDetail {
 	fmt.Println("GetUser", userID)
@@ -31,10 +32,18 @@ func GetUsers() []traq.User {
 	return Users
 }
 
+func BotsToUsers(Bots []traq.Bot) []traq.User {
+	var Users []traq.User
+	for _, bot := range Bots {
+		Users = append(Users, BotToUser(bot))
+	}
+	return Users
+}
+
 // GetUserByUserNameWithMe 一致するユーザーが見つからなかったら、自分を返す
 func GetUserByUserNameWithMe(UserName string, UserID string) *traq.User {
 	meNum := 0
-	for num, user := range UserList {
+	for num, user := range UserAndBotList {
 		if user.Name == UserName {
 			return &user
 		}
@@ -42,11 +51,11 @@ func GetUserByUserNameWithMe(UserName string, UserID string) *traq.User {
 			meNum += num
 		}
 	}
-	return &UserList[meNum]
+	return &UserAndBotList[meNum]
 }
 
 func GetUserByUserName(UserName string) (*traq.User, error) {
-	for _, user := range UserList {
+	for _, user := range UserAndBotList {
 		if user.Name == UserName {
 			return &user, nil
 		}

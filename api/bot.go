@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"example-bot/util"
+	"fmt"
 	"github.com/traPtitech/go-traq"
 )
 
@@ -32,4 +33,36 @@ func IsBotJoined(ChannelID string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func GetBots() []traq.Bot {
+	bot := util.GetBot()
+	Bots, _, err := bot.API().BotApi.GetBots(context.Background()).Execute()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return Bots
+}
+
+func BotToUser(bot traq.Bot) traq.User {
+	user := traq.User{
+		Id:          bot.Id,
+		Name:        bot.BotUserId,
+		DisplayName: "",
+		IconFileId:  "",
+		Bot:         true,
+		State:       BotStateToUserState(bot.State),
+		UpdatedAt:   bot.UpdatedAt,
+	}
+	return user
+}
+
+func BotStateToUserState(botState traq.BotState) traq.UserAccountState {
+	switch botState {
+	case traq.BOTSTATE_deactivated:
+		return traq.USERACCOUNTSTATE_deactivated
+	case traq.BOTSTATE_active:
+		return traq.USERACCOUNTSTATE_active
+	}
+	return traq.USERACCOUNTSTATE_suspended
 }
