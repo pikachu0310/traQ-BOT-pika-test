@@ -65,7 +65,7 @@ func Stamps(cmdText string, channelID string) error {
 		return fmt.Sprintf("https://q.trap.jp/messages/%s", m.A.Id)
 	})
 
-	resultContent := formatPostContent(formattedMessages, formattedTopFiveMessages)
+	resultContent := formatPostContent(formattedMessages, formattedTopFiveMessages, user.Name, stamp.Name, minStampNum)
 	if err = api.EditMessageWithErr(resultMessage.Id, resultContent); err != nil {
 		return post(fmt.Sprintf("Message edit failed: %s", err.Error()))
 	}
@@ -137,8 +137,9 @@ func countStampNumbers(messages []*traq.Message, stampID string) []messageWithCo
 	})
 }
 
-func formatPostContent(all []string, top []string) string {
+func formatPostContent(all []string, top []string, userName string, stampName string, minStampNum int) string {
 	var lines []string
+	lines = append(lines, fmt.Sprintf(":%s:を付けた人数が%dより多い:@%s:が発言したメッセージの数: %d\n", stampName, minStampNum, userName, len(all)))
 	lines = append(lines, "```")
 	lines = append(lines, First(all, 100)...)
 	lines = append(lines, "```")
